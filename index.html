@@ -3,63 +3,1032 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>andkon.dev</title>
+    <title>andkon.dev 98</title>
     <style>
+        :root {
+            --desktop: #008080;
+            --surface: #c0c0c0;
+            --surface-light: #dfdfdf;
+            --white: #ffffff;
+            --shadow: #808080;
+            --shadow-dark: #404040;
+            --button-highlight: #ffffff;
+            --button-face: #dfdfdf;
+            --button-shadow: #808080;
+            --window-frame: #0a0a0a;
+            --title-active: #000080;
+            --title-active-light: #1084d0;
+            --title-inactive: #808080;
+            --taskbar-height: 28px;
+            --text: #000000;
+            --selection: #000080;
+            --selection-text: #ffffff;
+            --element-spacing: 8px;
+            --border-raised-outer:
+                inset -1px -1px var(--window-frame),
+                inset 1px 1px var(--button-highlight);
+            --border-raised-inner:
+                inset -2px -2px var(--button-shadow),
+                inset 2px 2px var(--button-face);
+            --border-sunken-outer:
+                inset -1px -1px var(--button-highlight),
+                inset 1px 1px var(--window-frame);
+            --border-sunken-inner:
+                inset -2px -2px var(--button-face),
+                inset 2px 2px var(--button-shadow);
+            --border-window-outer:
+                inset -1px -1px var(--window-frame),
+                inset 1px 1px var(--button-face);
+            --border-window-inner:
+                inset -2px -2px var(--button-shadow),
+                inset 2px 2px var(--button-highlight);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
         body {
             margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: #0f172a;
-            color: #e2e8f0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            min-height: 100%;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        body {
+            background: var(--desktop);
+            color: var(--text);
+            font: 11px/1.2 "MS Sans Serif", "Microsoft Sans Serif", Tahoma, sans-serif;
+            overflow: hidden;
+            text-rendering: optimizeLegibility;
+        }
+
+        button,
+        a,
+        input {
+            font: inherit;
+        }
+
+        .desktop {
+            position: relative;
             min-height: 100vh;
+            padding: 16px 18px calc(var(--taskbar-height) + 18px);
         }
-        .container {
-            text-align: center;
-            max-width: 600px;
-            padding: 2rem;
+
+        .desktop-icons {
+            inset: 16px 18px calc(var(--taskbar-height) + 18px) 18px;
+            position: absolute;
         }
-        h1 {
-            font-size: 3rem;
-            margin: 0 0 1rem 0;
+
+        .desktop-icon {
+            appearance: none;
+            background: transparent;
+            border: 0;
+            color: inherit;
+            cursor: default;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 2px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            touch-action: none;
+            user-select: none;
+            width: 80px;
+            z-index: 1;
         }
-        p {
-            font-size: 1.25rem;
-            color: #94a3b8;
-            margin: 0 0 2rem 0;
+
+        .desktop-icon:focus {
+            outline: none;
         }
-        .projects {
-            margin-top: 3rem;
+
+        .desktop-icon.dragging {
+            z-index: 2;
+        }
+
+        .desktop-icon .icon-frame {
+            align-items: center;
+            border: 1px dotted transparent;
             display: flex;
             justify-content: center;
-            gap: 1rem;
-            flex-wrap: wrap;
+            padding: 2px;
+            width: 40px;
+            height: 40px;
         }
-        a {
-            display: inline-block;
-            padding: 0.75rem 1.5rem;
-            background: #10b981;
-            color: white;
+
+        .desktop-icon.selected .icon-frame,
+        .desktop-icon:focus-visible .icon-frame {
+            border-color: var(--white);
+        }
+
+        .desktop-icon .label {
+            color: var(--white);
+            max-width: 76px;
+            padding: 0 2px;
+            text-align: center;
+            text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.6);
+        }
+
+        .desktop-icon.selected .label,
+        .desktop-icon:focus-visible .label {
+            background: var(--selection);
+            color: var(--selection-text);
+            text-shadow: none;
+        }
+
+        .window {
+            background: var(--surface);
+            box-shadow: var(--border-window-outer), var(--border-window-inner);
+            display: flex;
+            flex-direction: column;
+            padding: 3px;
+            position: absolute;
+            width: min(420px, calc(100vw - 170px));
+            min-width: 280px;
+            z-index: 3;
+        }
+
+        .window.dragging {
+            z-index: 4;
+        }
+
+        .window.is-maximized {
+            min-width: 0;
+            min-height: 0;
+        }
+
+        .title-bar {
+            align-items: center;
+            background: linear-gradient(to right, var(--title-active), var(--title-active-light));
+            cursor: move;
+            color: var(--selection-text);
+            display: flex;
+            justify-content: space-between;
+            margin: 0;
+            min-height: 18px;
+            padding: 3px 2px 3px 3px;
+            touch-action: none;
+            user-select: none;
+        }
+
+        .title-bar-left {
+            align-items: center;
+            display: flex;
+            gap: 4px;
+            min-width: 0;
+        }
+
+        .title-bar-text {
+            font-weight: bold;
+            line-height: 1;
+            margin-right: 24px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .title-bar-controls {
+            display: flex;
+            flex-shrink: 0;
+            gap: 0;
+        }
+
+        .title-button {
+            appearance: none;
+            background: var(--surface);
+            border: none;
+            box-shadow: var(--border-raised-outer), var(--border-raised-inner);
+            display: block;
+            flex: 0 0 16px;
+            height: 14px;
+            min-width: 16px;
+            overflow: hidden;
+            padding: 0;
+            position: relative;
+            width: 16px;
+            cursor: default;
+            background-repeat: no-repeat;
+        }
+
+        .title-button:active {
+            box-shadow: var(--border-sunken-outer), var(--border-sunken-inner);
+        }
+
+        .title-button:focus {
+            outline: none;
+        }
+
+        .title-button.minimize {
+            background-image: url("assets/title-minimize.svg");
+            background-position: bottom 3px left 4px;
+        }
+
+        .title-button.maximize {
+            background-image: url("assets/title-maximize.svg");
+            background-position: top 2px left 3px;
+        }
+
+        .window.is-maximized .title-button.maximize {
+            background-image: url("assets/title-restore.svg");
+            background-position: top 2px left 3px;
+        }
+
+        .title-button.close {
+            background-image: url("assets/title-close.svg");
+            background-position: top 3px left 4px;
+            margin-left: 2px;
+        }
+
+        .window-body {
+            display: flex;
+            flex: 1;
+            flex-direction: column;
+            margin: var(--element-spacing);
+        }
+
+        .window-body p {
+            margin: 0 0 14px;
+        }
+
+        .window-body ul {
+            list-style: square;
+            margin: 0 0 16px 18px;
+            padding: 0;
+        }
+
+        .window-body li + li {
+            margin-top: 5px;
+        }
+
+        .window-actions {
+            display: flex;
+            gap: 6px;
+            justify-content: flex-end;
+            margin-top: auto;
+        }
+
+        .win-button {
+            align-items: center;
+            background: var(--surface);
+            box-shadow: var(--border-raised-outer), var(--border-raised-inner);
+            color: inherit;
+            display: inline-flex;
+            cursor: default;
+            justify-content: center;
+            line-height: 1;
+            min-width: 75px;
+            min-height: 23px;
+            padding: 0 12px;
+            position: relative;
             text-decoration: none;
-            border-radius: 0.5rem;
-            font-weight: 500;
-            transition: background 0.2s;
         }
-        a:hover {
-            background: #34d399;
+
+        .win-button:active {
+            box-shadow: var(--border-sunken-outer), var(--border-sunken-inner);
+            padding: 0 12px;
+        }
+
+        .win-button-label {
+            display: block;
+            line-height: 1.05;
+            padding: 5px 0 4px;
+            text-align: center;
+        }
+
+        .win-button:active .win-button-label {
+            transform: translate(1px, 1px);
+        }
+
+        .win-button:focus-visible {
+            outline: 1px dotted #000000;
+            outline-offset: -4px;
+        }
+
+        .taskbar {
+            align-items: center;
+            background: var(--surface);
+            border-top: 2px solid var(--surface-light);
+            bottom: 0;
+            display: flex;
+            gap: 4px;
+            height: var(--taskbar-height);
+            left: 0;
+            padding: 3px 4px;
+            position: fixed;
+            right: 0;
+        }
+
+        .start-button,
+        .task-button,
+        .tray-clock {
+            align-items: center;
+            border: none;
+            background: var(--surface);
+            border-top: 2px solid var(--white);
+            border-left: 2px solid var(--white);
+            border-right: 2px solid var(--shadow-dark);
+            border-bottom: 2px solid var(--shadow-dark);
+            display: inline-flex;
+            height: 22px;
+        }
+
+        .start-button {
+            gap: 4px;
+            min-width: 54px;
+            padding: 0 7px 0 5px;
+            font-weight: bold;
+        }
+
+        .task-button {
+            appearance: none;
+            cursor: default;
+            justify-content: flex-start;
+            min-width: 182px;
+            max-width: 240px;
+            padding: 0 8px;
+        }
+
+        .task-button:focus {
+            outline: none;
+        }
+
+        .task-button.active {
+            border-top-color: var(--shadow-dark);
+            border-left-color: var(--shadow-dark);
+            border-right-color: var(--white);
+            border-bottom-color: var(--white);
+            background: var(--surface);
+        }
+
+        .task-button-text {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .taskbar-spacer {
+            flex: 1;
+        }
+
+        .tray-clock {
+            border-top: 1px solid var(--shadow-dark);
+            border-left: 1px solid var(--shadow-dark);
+            border-right: 1px solid var(--white);
+            border-bottom: 1px solid var(--white);
+            box-shadow:
+                inset 1px 1px 0 var(--shadow),
+                inset -1px -1px 0 var(--surface-light);
+            justify-content: center;
+            min-width: 70px;
+            padding: 0 10px;
+        }
+
+        .icon-asset {
+            display: block;
+        }
+
+        .pixel-icon {
+            image-rendering: crisp-edges;
+            image-rendering: pixelated;
+        }
+
+        .start-icon {
+            width: 16px;
+            height: 16px;
+        }
+
+        .desktop-window-icon {
+            width: 16px;
+            height: 16px;
+        }
+
+        .desktop-project-icon {
+            width: 32px;
+            height: 32px;
+        }
+
+        .license-plate-icon {
+            height: auto;
+            max-width: 32px;
+            max-height: 32px;
+        }
+
+        @media (max-width: 700px) {
+            .desktop {
+                padding: 12px 12px calc(var(--taskbar-height) + 12px);
+            }
+
+            .desktop-icons {
+                inset: 12px 12px calc(var(--taskbar-height) + 12px) 12px;
+            }
+
+            .task-button {
+                min-width: 120px;
+                max-width: 160px;
+            }
+        }
+
+        @media (max-width: 520px) {
+            .window-actions {
+                gap: 4px;
+            }
+
+            .win-button {
+                flex: 1 1 0;
+                min-width: 0;
+                padding: 0 8px;
+            }
+
+            .task-button {
+                min-width: 96px;
+                max-width: 120px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>andkon.dev</h1>
-        <p>Developer portfolio coming soon</p>
-        <div class="projects">
-            <a href="/license-plate-tracker/">License Plate Tracker</a>
-            <a href="https://andkon.dev/grokipedia-wikipedia-split/">Grokipedia + Wikipedia Split View</a>
+    <main class="desktop">
+        <section aria-label="Desktop shortcuts" class="desktop-icons" id="desktop-icons"></section>
+
+        <section aria-label="Welcome window" class="window">
+            <div class="title-bar">
+                <div class="title-bar-left">
+                    <img alt="" class="icon-asset desktop-window-icon" height="16" src="assets/welcome-window.svg" width="16">
+                    <span class="title-bar-text">Welcome to andkon.dev</span>
+                </div>
+                <div class="title-bar-controls">
+                    <button aria-label="Minimize" class="title-button minimize" type="button"></button>
+                    <button aria-label="Maximize" class="title-button maximize" type="button"></button>
+                    <button aria-label="Close" class="title-button close" type="button"></button>
+                </div>
+            </div>
+            <div class="window-body">
+                <p>This is a first-pass Windows 98-style desktop for the portfolio homepage.</p>
+                <ul>
+                    <li>Double-click an icon to open a project.</li>
+                    <li>Press <strong>Enter</strong> on a selected icon to launch it.</li>
+                    <li>The Start button is decorative for now.</li>
+                </ul>
+                <div class="window-actions" id="window-actions"></div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="taskbar">
+        <div aria-hidden="true" class="start-button">
+            <img alt="" class="icon-asset start-icon" height="16" src="assets/start.svg" width="16">
+            <span>Start</span>
         </div>
-    </div>
+
+        <button aria-label="Welcome to andkon.dev window" class="task-button active" type="button">
+            <span class="task-button-text">Welcome to andkon.dev</span>
+        </button>
+
+        <div class="taskbar-spacer"></div>
+        <div aria-label="Current time" class="tray-clock" id="clock">12:00 PM</div>
+    </footer>
+
+    <script>
+        (function () {
+            const desktop = document.querySelector(".desktop");
+            const desktopIcons = document.getElementById("desktop-icons");
+            const windowActions = document.getElementById("window-actions");
+            const welcomeWindow = document.querySelector(".window");
+            const taskbar = document.querySelector(".taskbar");
+            const taskButton = document.querySelector(".task-button");
+            const clock = document.getElementById("clock");
+            const iconLaneGap = 24;
+            const minimumVisibleWindow = 120;
+            const startupWindowTopOffset = 38;
+            const projects = [
+                {
+                    id: "grokipedia-split",
+                    icon: "assets/grokipedia-split.png",
+                    label: "Grokipedia Split View",
+                    openInNewTab: true,
+                    position: {
+                        left: 0,
+                        top: 0
+                    },
+                    url: "https://andkon.dev/grokipedia-wikipedia-split/"
+                },
+                {
+                    id: "license-plate-tracker",
+                    icon: "assets/license-source.png",
+                    imageClass: "license-plate-icon",
+                    label: "License Plate Tracker",
+                    openInNewTab: true,
+                    position: {
+                        left: 0,
+                        top: 90
+                    },
+                    url: "https://andkon.dev/license-plate-tracker/"
+                }
+            ];
+            let icons = [];
+
+            function createProjectIcon(project) {
+                const button = document.createElement("button");
+                const frame = document.createElement("span");
+                const image = document.createElement("img");
+                const label = document.createElement("span");
+
+                button.className = "desktop-icon";
+                button.dataset.projectId = project.id;
+                button.dataset.target = project.url;
+                button.dataset.targetBlank = String(project.openInNewTab);
+                button.style.left = project.position.left + "px";
+                button.style.top = project.position.top + "px";
+                button.type = "button";
+
+                frame.className = "icon-frame";
+                frame.setAttribute("aria-hidden", "true");
+
+                image.alt = "";
+                image.className = ["icon-asset", "desktop-project-icon", project.imageClass].filter(Boolean).join(" ");
+                image.src = project.icon;
+
+                label.className = "label";
+                label.textContent = project.label;
+
+                frame.appendChild(image);
+                button.append(frame, label);
+                return button;
+            }
+
+            function createWindowAction(project) {
+                const link = document.createElement("a");
+                const label = document.createElement("span");
+
+                link.className = "win-button";
+                link.href = project.url;
+                if (project.openInNewTab) {
+                    link.rel = "noopener noreferrer";
+                    link.target = "_blank";
+                }
+
+                label.className = "win-button-label";
+                label.textContent = project.label;
+                link.appendChild(label);
+
+                return link;
+            }
+
+            function renderProjects() {
+                const desktopIconFragment = document.createDocumentFragment();
+                const windowActionFragment = document.createDocumentFragment();
+
+                projects.forEach(function (project) {
+                    desktopIconFragment.appendChild(createProjectIcon(project));
+                    windowActionFragment.appendChild(createWindowAction(project));
+                });
+
+                desktopIcons.replaceChildren(desktopIconFragment);
+                windowActions.replaceChildren(windowActionFragment);
+                icons = Array.from(desktopIcons.querySelectorAll(".desktop-icon"));
+            }
+
+            renderProjects();
+
+            function clamp(value, min, max) {
+                return Math.min(Math.max(value, min), max);
+            }
+
+            function getDesktopTopInset() {
+                return parseFloat(window.getComputedStyle(desktop).paddingTop) || 0;
+            }
+
+            function getIconLaneRight() {
+                return icons.reduce(function (maxRight, icon) {
+                    return Math.max(maxRight, desktopIcons.offsetLeft + icon.offsetLeft + icon.offsetWidth);
+                }, desktopIcons.offsetLeft);
+            }
+
+            function suppressNextClick(element) {
+                element.dataset.justDragged = "true";
+                window.setTimeout(function () {
+                    element.dataset.justDragged = "false";
+                }, 0);
+            }
+
+            function makeDraggable(options) {
+                const element = options.element;
+                const handle = options.handle || element;
+                let dragState = null;
+
+                handle.addEventListener("pointerdown", function (event) {
+                    if (typeof options.isDisabled === "function" && options.isDisabled()) {
+                        return;
+                    }
+
+                    if (options.cancelSelector && event.target.closest(options.cancelSelector)) {
+                        return;
+                    }
+
+                    if (event.button !== 0) {
+                        return;
+                    }
+
+                    dragState = {
+                        pointerId: event.pointerId,
+                        originLeft: element.offsetLeft,
+                        originTop: element.offsetTop,
+                        startX: event.clientX,
+                        startY: event.clientY,
+                        moved: false
+                    };
+
+                    handle.setPointerCapture(event.pointerId);
+
+                    if (typeof options.onPointerDown === "function") {
+                        options.onPointerDown(event);
+                    }
+
+                    event.preventDefault();
+                });
+
+                handle.addEventListener("pointermove", function (event) {
+                    if (!dragState || event.pointerId !== dragState.pointerId) {
+                        return;
+                    }
+
+                    const deltaX = event.clientX - dragState.startX;
+                    const deltaY = event.clientY - dragState.startY;
+
+                    if (!dragState.moved && Math.hypot(deltaX, deltaY) > 3) {
+                        dragState.moved = true;
+                        element.classList.add("dragging");
+                    }
+
+                    if (!dragState.moved) {
+                        return;
+                    }
+
+                    const bounds = options.getBounds();
+                    const nextLeft = clamp(dragState.originLeft + deltaX, bounds.minLeft, bounds.maxLeft);
+                    const nextTop = clamp(dragState.originTop + deltaY, bounds.minTop, bounds.maxTop);
+
+                    element.style.right = "auto";
+                    element.style.left = nextLeft + "px";
+                    element.style.top = nextTop + "px";
+
+                    if (typeof options.onDrag === "function") {
+                        options.onDrag(event, {
+                            left: nextLeft,
+                            top: nextTop
+                        });
+                    }
+                });
+
+                function finishDrag(event) {
+                    if (!dragState || event.pointerId !== dragState.pointerId) {
+                        return;
+                    }
+
+                    const moved = dragState.moved;
+
+                    if (handle.hasPointerCapture(event.pointerId)) {
+                        handle.releasePointerCapture(event.pointerId);
+                    }
+
+                    element.classList.remove("dragging");
+                    dragState = null;
+
+                    if (typeof options.onPointerUp === "function") {
+                        options.onPointerUp(event, {
+                            moved: moved
+                        });
+                    }
+                }
+
+                handle.addEventListener("pointerup", finishDrag);
+                handle.addEventListener("pointercancel", finishDrag);
+                handle.addEventListener("dragstart", function (event) {
+                    event.preventDefault();
+                });
+            }
+
+            function getWindowBounds(windowEl, options) {
+                const settings = options || {};
+                const maxVisibleLeft = Math.max(0, desktop.clientWidth - minimumVisibleWindow);
+                const minLeft = settings.reserveIconLane ? getIconLaneRight() + iconLaneGap : 0;
+
+                return {
+                    minLeft: minLeft,
+                    maxLeft: Math.max(minLeft, maxVisibleLeft),
+                    minTop: 0,
+                    maxTop: Math.max(0, desktop.clientHeight - taskbar.offsetHeight - windowEl.offsetHeight)
+                };
+            }
+
+            function selectIcon(icon) {
+                icons.forEach((item) => item.classList.toggle("selected", item === icon));
+            }
+
+            function openIcon(icon) {
+                const target = icon.dataset.target;
+                const openInNewTab = icon.dataset.targetBlank === "true";
+
+                if (!target) {
+                    return;
+                }
+
+                if (openInNewTab) {
+                    window.open(target, "_blank", "noopener,noreferrer");
+                } else {
+                    window.location.href = target;
+                }
+            }
+
+            function isTapLaunchPointer(event) {
+                return event.pointerType === "touch" || event.pointerType === "pen";
+            }
+
+            icons.forEach((icon) => {
+                makeDraggable({
+                    element: icon,
+                    getBounds: function () {
+                        return {
+                            minLeft: 0,
+                            maxLeft: Math.max(0, desktopIcons.clientWidth - icon.offsetWidth),
+                            minTop: 0,
+                            maxTop: Math.max(0, desktopIcons.clientHeight - icon.offsetHeight)
+                        };
+                    },
+                    onPointerDown: function () {
+                        selectIcon(icon);
+                        icon.focus({
+                            preventScroll: true
+                        });
+                    },
+                    onPointerUp: function (event, details) {
+                        if (details.moved) {
+                            suppressNextClick(icon);
+                            return;
+                        }
+
+                        if (isTapLaunchPointer(event)) {
+                            openIcon(icon);
+                        }
+                    }
+                });
+
+                icon.addEventListener("click", function () {
+                    if (icon.dataset.justDragged === "true") {
+                        return;
+                    }
+
+                    selectIcon(icon);
+                });
+
+                icon.addEventListener("dblclick", function () {
+                    if (icon.dataset.justDragged === "true") {
+                        return;
+                    }
+
+                    openIcon(icon);
+                });
+
+                icon.addEventListener("keydown", function (event) {
+                    if (event.key === "Enter") {
+                        event.preventDefault();
+                        openIcon(icon);
+                    }
+                });
+
+                icon.addEventListener("focus", function () {
+                    selectIcon(icon);
+                });
+            });
+
+            document.addEventListener("click", function (event) {
+                const clickedIcon = event.target.closest(".desktop-icon");
+                if (!clickedIcon) {
+                    icons.forEach((icon) => icon.classList.remove("selected"));
+                }
+            });
+
+            function setupWindow(options) {
+                const windowEl = options.windowEl;
+                const taskButtonEl = options.taskButtonEl;
+                const titleBarEl = windowEl.querySelector(".title-bar");
+                const minimizeButtonEl = windowEl.querySelector(".title-button.minimize");
+                const maximizeButtonEl = windowEl.querySelector(".title-button.maximize");
+                const closeButtonEl = windowEl.querySelector(".title-button.close");
+                const state = {
+                    closed: false,
+                    maximized: false,
+                    minimized: false,
+                    restoreLeft: 0,
+                    restoreTop: 0,
+                    restoreWidth: windowEl.offsetWidth,
+                    userPositioned: false
+                };
+
+                function rememberPlacement() {
+                    if (state.maximized || windowEl.hidden) {
+                        return;
+                    }
+
+                    state.restoreLeft = windowEl.offsetLeft;
+                    state.restoreTop = windowEl.offsetTop;
+                    state.restoreWidth = windowEl.offsetWidth;
+                }
+
+                function applyMaximizedBounds() {
+                    windowEl.classList.add("is-maximized");
+                    windowEl.style.right = "auto";
+                    windowEl.style.left = "0px";
+                    windowEl.style.top = "0px";
+                    windowEl.style.width = desktop.clientWidth + "px";
+                    windowEl.style.height = Math.max(0, desktop.clientHeight - taskbar.offsetHeight) + "px";
+                }
+
+                function applyRestoredBounds() {
+                    const restoredWidth = Math.min(state.restoreWidth, Math.max(280, desktop.clientWidth));
+
+                    windowEl.classList.remove("is-maximized");
+                    windowEl.style.right = "auto";
+                    windowEl.style.left = state.restoreLeft + "px";
+                    windowEl.style.top = state.restoreTop + "px";
+                    windowEl.style.width = restoredWidth + "px";
+                    windowEl.style.height = "auto";
+                }
+
+                function positionAtStartup() {
+                    const bounds = getWindowBounds(windowEl, {
+                        reserveIconLane: true
+                    });
+                    const startupTop = clamp(getDesktopTopInset() + startupWindowTopOffset, bounds.minTop, bounds.maxTop);
+
+                    windowEl.style.right = "auto";
+                    windowEl.style.left = bounds.minLeft + "px";
+                    windowEl.style.top = startupTop + "px";
+                    rememberPlacement();
+                }
+
+                function clampPlacement() {
+                    if (state.closed || state.maximized || windowEl.hidden) {
+                        return;
+                    }
+
+                    const bounds = getWindowBounds(windowEl, {
+                        reserveIconLane: !state.userPositioned
+                    });
+
+                    windowEl.style.left = clamp(windowEl.offsetLeft, bounds.minLeft, bounds.maxLeft) + "px";
+                    windowEl.style.top = clamp(windowEl.offsetTop, bounds.minTop, bounds.maxTop) + "px";
+                    rememberPlacement();
+                }
+
+                function syncState() {
+                    if (!state.closed) {
+                        if (state.maximized) {
+                            applyMaximizedBounds();
+                        } else {
+                            applyRestoredBounds();
+                            clampPlacement();
+                        }
+                    }
+
+                    windowEl.hidden = state.closed || state.minimized;
+                    taskButtonEl.hidden = state.closed;
+                    taskButtonEl.classList.toggle("active", !state.closed && !state.minimized);
+                    taskButtonEl.setAttribute("aria-pressed", String(!state.closed && !state.minimized));
+                    maximizeButtonEl.setAttribute("aria-label", state.maximized ? "Restore" : "Maximize");
+                }
+
+                function minimizeWindow() {
+                    if (state.closed || state.minimized) {
+                        return;
+                    }
+
+                    state.minimized = true;
+                    syncState();
+                }
+
+                function restoreWindow() {
+                    if (state.closed) {
+                        return;
+                    }
+
+                    state.minimized = false;
+                    syncState();
+                }
+
+                function toggleMaximizeWindow() {
+                    if (state.closed) {
+                        return;
+                    }
+
+                    if (state.minimized) {
+                        state.minimized = false;
+                    }
+
+                    if (!state.maximized) {
+                        rememberPlacement();
+                    }
+
+                    state.maximized = !state.maximized;
+                    syncState();
+                }
+
+                function closeWindow() {
+                    state.closed = true;
+                    state.minimized = false;
+                    syncState();
+                }
+
+                function toggleTaskButtonWindow() {
+                    if (state.closed) {
+                        return;
+                    }
+
+                    if (state.minimized) {
+                        restoreWindow();
+                    } else {
+                        minimizeWindow();
+                    }
+                }
+
+                makeDraggable({
+                    element: windowEl,
+                    handle: titleBarEl,
+                    cancelSelector: ".title-button",
+                    getBounds: function () {
+                        return getWindowBounds(windowEl, {
+                            reserveIconLane: false
+                        });
+                    },
+                    isDisabled: function () {
+                        return state.maximized || state.closed || state.minimized;
+                    },
+                    onPointerUp: function (_, details) {
+                        if (details.moved) {
+                            state.userPositioned = true;
+                            rememberPlacement();
+                        }
+                    }
+                });
+
+                minimizeButtonEl.addEventListener("click", function () {
+                    minimizeWindow();
+                });
+
+                maximizeButtonEl.addEventListener("click", function () {
+                    toggleMaximizeWindow();
+                });
+
+                closeButtonEl.addEventListener("click", function () {
+                    closeWindow();
+                });
+
+                taskButtonEl.addEventListener("click", function () {
+                    toggleTaskButtonWindow();
+                });
+
+                positionAtStartup();
+                syncState();
+
+                return {
+                    handleResize: function () {
+                        if (state.closed) {
+                            return;
+                        }
+
+                        if (state.maximized && !state.minimized) {
+                            applyMaximizedBounds();
+                        } else if (!state.minimized) {
+                            clampPlacement();
+                        }
+                    }
+                };
+            }
+
+            const welcomeWindowController = setupWindow({
+                taskButtonEl: taskButton,
+                windowEl: welcomeWindow
+            });
+
+            function updateClock() {
+                const now = new Date();
+                clock.textContent = now.toLocaleTimeString([], {
+                    hour: "numeric",
+                    minute: "2-digit"
+                });
+            }
+
+            updateClock();
+            window.setInterval(updateClock, 30000);
+            window.addEventListener("resize", function () {
+                welcomeWindowController.handleResize();
+            });
+        }());
+    </script>
 </body>
 </html>
