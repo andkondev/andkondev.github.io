@@ -321,6 +321,7 @@
             padding: 3px 4px;
             position: fixed;
             right: 0;
+            z-index: 10;
         }
 
         .start-button,
@@ -715,14 +716,18 @@
 
             function getWindowBounds(windowEl, options) {
                 const settings = options || {};
-                const maxVisibleLeft = Math.max(0, desktop.clientWidth - minimumVisibleWindow);
-                const minLeft = settings.reserveIconLane ? getIconLaneRight() + iconLaneGap : 0;
+                const minimumVisibleLeft = settings.reserveIconLane
+                    ? getIconLaneRight() + iconLaneGap
+                    : Math.min(0, minimumVisibleWindow - windowEl.offsetWidth);
+                const maxVisibleLeft = Math.max(minimumVisibleLeft, desktop.clientWidth - minimumVisibleWindow);
+                const titleBar = windowEl.querySelector(".title-bar");
+                const minimumVisibleTop = Math.max(0, (titleBar ? titleBar.offsetHeight : 0) + 2);
 
                 return {
-                    minLeft: minLeft,
-                    maxLeft: Math.max(minLeft, maxVisibleLeft),
+                    minLeft: minimumVisibleLeft,
+                    maxLeft: maxVisibleLeft,
                     minTop: 0,
-                    maxTop: Math.max(0, desktop.clientHeight - taskbar.offsetHeight - windowEl.offsetHeight)
+                    maxTop: Math.max(0, desktop.clientHeight - taskbar.offsetHeight - minimumVisibleTop)
                 };
             }
 
