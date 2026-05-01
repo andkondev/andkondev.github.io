@@ -52,6 +52,8 @@
         body {
             margin: 0;
             min-height: 100%;
+            overflow: hidden;
+            width: 100%;
         }
 
         [hidden] {
@@ -73,6 +75,7 @@
         }
 
         .desktop {
+            overflow: clip;
             position: relative;
             min-height: 100vh;
             padding: 16px 18px calc(var(--taskbar-height) + 18px);
