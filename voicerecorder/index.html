@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Andkon Voice Recorder</title>
+    <meta name="description" content="Andkon Voice Recorder project page and privacy policy.">
+    <style>
+        :root {
+            --yellow: #ffd700;
+            --orange: #ff9900;
+            --orange-dark: #b36b00;
+            --black: #000000;
+            --panel: #1a1a1a;
+            --row: #2a2a2a;
+            --row-light: #3a3a3a;
+            --border: #000000;
+            --inset: #444444;
+            --text: #ffffff;
+            --muted: #9ca3af;
+            --danger: #ff0000;
+            --max: 820px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            background: var(--black);
+            color: var(--text);
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background:
+                linear-gradient(180deg, rgba(255, 153, 0, 0.12), rgba(0, 0, 0, 0) 260px),
+                var(--black);
+            color: var(--text);
+            font-family: Arial, Helvetica, sans-serif;
+            line-height: 1.55;
+        }
+
+        a {
+            color: var(--yellow);
+            text-decoration-thickness: 2px;
+            text-underline-offset: 3px;
+        }
+
+        a:hover {
+            color: var(--orange);
+        }
+
+        .page {
+            margin: 0 auto;
+            max-width: var(--max);
+            padding: 18px 14px 40px;
+        }
+
+        header {
+            background: var(--panel);
+            border: 2px solid var(--border);
+            box-shadow: inset 0 0 0 1px var(--inset);
+        }
+
+        .hero {
+            align-items: center;
+            display: grid;
+            gap: 16px;
+            grid-template-columns: 96px 1fr;
+            padding: 16px;
+        }
+
+        .logo {
+            display: block;
+            height: 96px;
+            image-rendering: auto;
+            object-fit: contain;
+            width: 96px;
+        }
+
+        .eyebrow {
+            color: var(--yellow);
+            font-size: 0.76rem;
+            font-weight: 800;
+            letter-spacing: 0;
+            margin: 0 0 4px;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            color: var(--text);
+            font-size: clamp(1.65rem, 7vw, 2.75rem);
+            line-height: 1;
+            margin: 0 0 8px;
+            text-transform: uppercase;
+        }
+
+        .lede {
+            color: var(--muted);
+            font-size: 1rem;
+            margin: 0;
+        }
+
+        .meter {
+            align-items: end;
+            background: var(--black);
+            border-top: 2px solid var(--border);
+            display: grid;
+            gap: 4px;
+            grid-template-columns: repeat(24, 1fr);
+            height: 54px;
+            padding: 8px;
+        }
+
+        .bar {
+            background: linear-gradient(180deg, var(--yellow), var(--orange));
+            border: 1px solid var(--black);
+            min-height: 6px;
+        }
+
+        .bar:nth-child(1) { height: 18%; }
+        .bar:nth-child(2) { height: 38%; }
+        .bar:nth-child(3) { height: 62%; }
+        .bar:nth-child(4) { height: 78%; }
+        .bar:nth-child(5) { height: 44%; }
+        .bar:nth-child(6) { height: 24%; }
+        .bar:nth-child(7) { height: 56%; }
+        .bar:nth-child(8) { height: 84%; }
+        .bar:nth-child(9) { height: 68%; }
+        .bar:nth-child(10) { height: 34%; }
+        .bar:nth-child(11) { height: 20%; }
+        .bar:nth-child(12) { height: 48%; }
+        .bar:nth-child(13) { height: 76%; }
+        .bar:nth-child(14) { height: 88%; }
+        .bar:nth-child(15) { height: 58%; }
+        .bar:nth-child(16) { height: 30%; }
+        .bar:nth-child(17) { height: 42%; }
+        .bar:nth-child(18) { height: 70%; }
+        .bar:nth-child(19) { height: 82%; }
+        .bar:nth-child(20) { height: 50%; }
+        .bar:nth-child(21) { height: 28%; }
+        .bar:nth-child(22) { height: 36%; }
+        .bar:nth-child(23) { height: 64%; }
+        .bar:nth-child(24) { height: 46%; }
+
+        main {
+            display: grid;
+            gap: 14px;
+            margin-top: 14px;
+        }
+
+        section {
+            background: var(--panel);
+            border: 2px solid var(--border);
+            box-shadow: inset 0 0 0 1px var(--inset);
+        }
+
+        .section-title {
+            background: var(--yellow);
+            border-bottom: 2px solid var(--border);
+            color: var(--black);
+            font-size: 0.95rem;
+            font-weight: 900;
+            margin: 0;
+            padding: 10px 12px;
+            text-transform: uppercase;
+        }
+
+        .section-body {
+            padding: 13px 12px 14px;
+        }
+
+        h3 {
+            color: var(--yellow);
+            font-size: 1rem;
+            margin: 18px 0 6px;
+            text-transform: uppercase;
+        }
+
+        h3:first-child {
+            margin-top: 0;
+        }
+
+        p {
+            margin: 0 0 12px;
+        }
+
+        p:last-child {
+            margin-bottom: 0;
+        }
+
+        ul {
+            margin: 0 0 12px 0;
+            padding: 0;
+        }
+
+        li {
+            background: var(--row);
+            border: 2px solid var(--border);
+            list-style: none;
+            margin: 0 0 8px;
+            padding: 9px 10px;
+        }
+
+        strong {
+            color: var(--text);
+        }
+
+        .note {
+            background: var(--row-light);
+            border: 2px solid var(--border);
+            color: var(--text);
+            padding: 10px;
+        }
+
+        .muted {
+            color: var(--muted);
+        }
+
+        footer {
+            color: var(--muted);
+            font-size: 0.86rem;
+            padding: 22px 2px 0;
+            text-align: center;
+        }
+
+        @media (max-width: 620px) {
+            .page {
+                padding: 12px 10px 32px;
+            }
+
+            .hero {
+                grid-template-columns: 76px 1fr;
+                padding: 12px;
+            }
+
+            .logo {
+                height: 76px;
+                width: 76px;
+            }
+
+            .meter {
+                gap: 3px;
+                grid-template-columns: repeat(18, 1fr);
+            }
+
+            .bar:nth-child(n+19) {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <header>
+            <div class="hero">
+                <img class="logo" src="assets/andkon-title-logo-web.png" alt="Andkon logo">
+                <div>
+                    <p class="eyebrow">Free, No Ads!</p>
+                    <h1>Andkon Voice Recorder</h1>
+                    <p class="lede">A simple voice recorder for saving audio on your Android device.</p>
+                </div>
+            </div>
+            <div class="meter" aria-hidden="true">
+                <span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span>
+                <span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span>
+                <span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span>
+                <span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span>
+                <span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span>
+                <span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span>
+            </div>
+        </header>
+
+        <main>
+            <section id="privacy">
+                <h2 class="section-title">Privacy Policy</h2>
+                <div class="section-body">
+                    <p class="muted">Last updated: June 9, 2026</p>
+
+                    <h3>Summary</h3>
+                    <p>Andkon Voice Recorder records audio only when you start a recording. The app saves recordings on your device. The app does not upload recordings, does not use ads, does not use analytics, and does not sell personal information.</p>
+
+                    <h3>Information the app uses</h3>
+                    <ul>
+                        <li><strong>Microphone audio:</strong> used to create recordings when you press record.</li>
+                        <li><strong>Audio files:</strong> saved to your device's audio/media storage so the app can list, play, rename, and delete recordings.</li>
+                        <li><strong>App settings:</strong> saved on your device, such as recording quality, playback options, file display count, visualizer selection, and delete behavior.</li>
+                    </ul>
+
+                    <h3>Where recordings are stored</h3>
+                    <p>Recordings are saved as audio files on your Android device. On modern Android versions, recordings are stored in the device media collection under <strong>Recordings/AndkonVoiceRecorder</strong>. On older Android versions, recordings may be stored under <strong>Music/AndkonVoiceRecorder</strong>.</p>
+                    <p>Because recordings are stored as device media files, they may be visible to Android, file manager apps, media apps, device-transfer tools, or backup/sync tools that you choose to use outside this app.</p>
+
+                    <h3>What is not collected</h3>
+                    <ul>
+                        <li>The app does not upload recordings.</li>
+                        <li>The app does not create user accounts.</li>
+                        <li>The app does not use advertising SDKs.</li>
+                        <li>The app does not use analytics SDKs.</li>
+                        <li>The app does not sell or share personal information for advertising.</li>
+                    </ul>
+
+                    <h3>Permissions</h3>
+                    <ul>
+                        <li><strong>Microphone:</strong> required to record audio.</li>
+                        <li><strong>Notifications:</strong> used to show an active recording notification while recording, including when the app is in the background.</li>
+                        <li><strong>Audio/media storage:</strong> used to save and manage recordings in the app's recording folder on your device.</li>
+                    </ul>
+
+                    <h3>Deletion</h3>
+                    <p>You can delete recordings from inside the app when in-app delete is enabled, or by using Android/file manager tools. Deleting a recording removes the file available to the app, but it does not remove separate copies you may have made, files you may have shared, or backups created by Android or other services outside the app.</p>
+
+                    <h3>Android backup and device transfer</h3>
+                    <p>The app is configured to allow Android backup and device-transfer features to preserve app settings only. The app's Android backup rules do not include audio recordings.</p>
+                    <p>Recordings are stored as device media files, so they may still be included in separate Android media backup, device-transfer, cloud-sync, or file-backup features depending on your device settings and the services you use.</p>
+
+                    <h3>Children</h3>
+                    <p>Andkon Voice Recorder is not directed to children. The app is intended as a general-purpose utility.</p>
+
+                    <h3>Changes</h3>
+                    <p>This policy may be updated if the app's features or data practices change. The updated policy will be posted on this page with a new last-updated date.</p>
+
+                    <h3>Contact</h3>
+                    <p>For questions about Andkon Voice Recorder or this privacy policy, contact <a href="mailto:andkon@andkon.com">andkon@andkon.com</a>.</p>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2026 Andkon. All rights reserved.</p>
+        </footer>
+    </div>
+</body>
+</html>
