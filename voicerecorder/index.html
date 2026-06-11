@@ -74,10 +74,14 @@
         }
 
         .logo {
+            border: 2px solid rgba(255, 255, 255, 0.85);
+            border-radius: 22%;
+            box-shadow: 0 2px 0 var(--black), 0 0 12px rgba(255, 153, 0, 0.22);
             display: block;
             height: 96px;
             image-rendering: auto;
             object-fit: contain;
+            overflow: hidden;
             width: 96px;
         }
 
@@ -104,47 +108,27 @@
             margin: 0;
         }
 
-        .meter {
-            align-items: end;
+        .visualizer {
             background: var(--black);
-            border-top: 2px solid var(--border);
-            display: grid;
-            gap: 4px;
-            grid-template-columns: repeat(24, 1fr);
-            height: 54px;
-            padding: 8px;
+            border-bottom: 2px solid var(--border);
+            height: 64px;
+            overflow: hidden;
+            position: relative;
         }
 
-        .bar {
-            background: linear-gradient(180deg, var(--yellow), var(--orange));
-            border: 1px solid var(--black);
-            min-height: 6px;
+        .visualizer::after {
+            background: linear-gradient(90deg, var(--black), transparent 16%, transparent 84%, var(--black));
+            content: "";
+            inset: 0;
+            pointer-events: none;
+            position: absolute;
         }
 
-        .bar:nth-child(1) { height: 18%; }
-        .bar:nth-child(2) { height: 38%; }
-        .bar:nth-child(3) { height: 62%; }
-        .bar:nth-child(4) { height: 78%; }
-        .bar:nth-child(5) { height: 44%; }
-        .bar:nth-child(6) { height: 24%; }
-        .bar:nth-child(7) { height: 56%; }
-        .bar:nth-child(8) { height: 84%; }
-        .bar:nth-child(9) { height: 68%; }
-        .bar:nth-child(10) { height: 34%; }
-        .bar:nth-child(11) { height: 20%; }
-        .bar:nth-child(12) { height: 48%; }
-        .bar:nth-child(13) { height: 76%; }
-        .bar:nth-child(14) { height: 88%; }
-        .bar:nth-child(15) { height: 58%; }
-        .bar:nth-child(16) { height: 30%; }
-        .bar:nth-child(17) { height: 42%; }
-        .bar:nth-child(18) { height: 70%; }
-        .bar:nth-child(19) { height: 82%; }
-        .bar:nth-child(20) { height: 50%; }
-        .bar:nth-child(21) { height: 28%; }
-        .bar:nth-child(22) { height: 36%; }
-        .bar:nth-child(23) { height: 64%; }
-        .bar:nth-child(24) { height: 46%; }
+        .visualizer canvas {
+            display: block;
+            height: 100%;
+            width: 100%;
+        }
 
         main {
             display: grid;
@@ -220,6 +204,298 @@
             color: var(--muted);
         }
 
+        .screenshot-options {
+            display: grid;
+            gap: 14px;
+        }
+
+        .screenshot-draft {
+            background: var(--row);
+            border: 2px solid var(--border);
+            padding: 12px;
+        }
+
+        .draft-title {
+            color: var(--yellow);
+            font-size: 0.92rem;
+            font-weight: 900;
+            margin: 0 0 10px;
+            text-transform: uppercase;
+        }
+
+        .phone-frame {
+            background: var(--black);
+            border: 3px solid var(--border);
+            box-shadow: 0 0 0 1px var(--inset), 0 8px 18px rgba(0, 0, 0, 0.34);
+            overflow: hidden;
+        }
+
+        .phone-frame img {
+            display: block;
+            height: auto;
+            width: 100%;
+        }
+
+        .screen-caption {
+            color: var(--muted);
+            font-size: 0.82rem;
+            font-weight: 800;
+            margin-top: 8px;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        .carousel-shell {
+            align-items: center;
+            display: grid;
+            gap: 10px;
+            grid-template-columns: 46px minmax(0, 1fr) 46px;
+            justify-items: center;
+        }
+
+        .carousel-phone {
+            margin: 0;
+            max-width: 260px;
+            width: 100%;
+        }
+
+        .icon-button {
+            align-items: center;
+            background: var(--yellow);
+            border: 3px solid var(--border);
+            color: var(--black);
+            cursor: pointer;
+            display: inline-flex;
+            font-size: 1rem;
+            font-weight: 900;
+            height: 46px;
+            justify-content: center;
+            line-height: 1;
+            padding: 0;
+            width: 46px;
+        }
+
+        .icon-button:hover,
+        .icon-button:focus-visible {
+            background: var(--orange);
+            outline: 2px solid var(--text);
+            outline-offset: 2px;
+        }
+
+        .carousel-dots {
+            display: flex;
+            gap: 7px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .carousel-dot {
+            background: var(--black);
+            border: 2px solid var(--border);
+            cursor: pointer;
+            height: 13px;
+            padding: 0;
+            width: 13px;
+        }
+
+        .carousel-dot.is-active {
+            background: var(--yellow);
+        }
+
+        .strip-track {
+            display: grid;
+            gap: 10px;
+            grid-auto-columns: minmax(160px, 31%);
+            grid-auto-flow: column;
+            overflow-x: auto;
+            padding: 2px 0 10px;
+            scroll-snap-type: x mandatory;
+            scrollbar-color: var(--yellow) var(--black);
+        }
+
+        .strip-track .phone-frame {
+            scroll-snap-align: start;
+        }
+
+        .screenshot-grid {
+            display: grid;
+            gap: 10px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .screen-card {
+            background: var(--panel);
+            border: 2px solid var(--border);
+            padding: 8px;
+        }
+
+        .stack-preview {
+            align-items: center;
+            background:
+                linear-gradient(180deg, rgba(255, 215, 0, 0.08), rgba(0, 0, 0, 0) 34%),
+                var(--black);
+            border: 3px solid var(--border);
+            cursor: grab;
+            min-height: 420px;
+            overflow: hidden;
+            padding: 28px 14px;
+            position: relative;
+            touch-action: pan-y;
+            user-select: none;
+        }
+
+        .stack-preview:active {
+            cursor: grabbing;
+        }
+
+        .stack-preview:focus-visible {
+            outline: 2px solid var(--text);
+            outline-offset: 3px;
+        }
+
+        .stack-stage-row {
+            align-items: center;
+            display: grid;
+            gap: 10px;
+            grid-template-columns: 46px minmax(0, 1fr) 46px;
+        }
+
+        .stack-card {
+            background: transparent;
+            border: 0;
+            cursor: pointer;
+            left: 50%;
+            margin: 0;
+            padding: 0;
+            position: absolute;
+            top: 82px;
+            transform-origin: bottom center;
+            transition: transform 260ms ease, opacity 260ms ease, filter 260ms ease;
+            width: 28%;
+        }
+
+        .stack-card:focus-visible {
+            outline: 3px solid var(--yellow);
+            outline-offset: 5px;
+        }
+
+        .stack-card img {
+            background: var(--black);
+            border: 3px solid var(--border);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.45);
+            display: block;
+            max-width: 170px;
+            pointer-events: none;
+            width: 100%;
+        }
+
+        .stack-card.is-active img {
+            box-shadow: 0 0 0 2px var(--yellow), 0 16px 28px rgba(0, 0, 0, 0.55);
+        }
+
+        .stack-card[data-stack-position="-1"] {
+            filter: brightness(0.88);
+            opacity: 0.95;
+            transform: translateX(-112%) rotate(-9deg) translateY(20px) scale(0.92);
+            z-index: 2;
+        }
+
+        .stack-card[data-stack-position="0"] {
+            filter: brightness(1);
+            opacity: 1;
+            transform: translateX(-50%) rotate(0deg) translateY(-12px) scale(1.12);
+            z-index: 5;
+        }
+
+        .stack-card[data-stack-position="1"] {
+            filter: brightness(0.88);
+            opacity: 0.95;
+            transform: translateX(12%) rotate(9deg) translateY(20px) scale(0.92);
+            z-index: 2;
+        }
+
+        .stack-card[data-stack-position="2"],
+        .stack-card[data-stack-position="-2"] {
+            filter: brightness(0.58);
+            opacity: 0.48;
+            transform: translateX(-50%) rotate(3deg) translateY(34px) scale(0.82);
+            z-index: 1;
+        }
+
+        body.is-lightbox-open {
+            overflow: hidden;
+        }
+
+        .lightbox[hidden] {
+            display: none;
+        }
+
+        .lightbox {
+            align-items: center;
+            background: rgba(0, 0, 0, 0.9);
+            display: grid;
+            inset: 0;
+            justify-items: center;
+            padding: 20px 58px;
+            position: fixed;
+            z-index: 20;
+        }
+
+        .lightbox-figure {
+            margin: 0;
+            max-width: min(520px, 86vw);
+        }
+
+        .lightbox-figure img {
+            background: var(--black);
+            border: 3px solid var(--border);
+            box-shadow: 0 0 0 2px var(--yellow), 0 18px 42px rgba(0, 0, 0, 0.7);
+            display: block;
+            max-height: 82vh;
+            object-fit: contain;
+            width: 100%;
+        }
+
+        .lightbox-button {
+            align-items: center;
+            background: var(--yellow);
+            border: 3px solid var(--border);
+            color: var(--black);
+            cursor: pointer;
+            display: inline-flex;
+            font-size: 1rem;
+            font-weight: 900;
+            height: 46px;
+            justify-content: center;
+            padding: 0;
+            position: absolute;
+            width: 46px;
+        }
+
+        .lightbox-button:hover,
+        .lightbox-button:focus-visible {
+            background: var(--orange);
+            outline: 2px solid var(--text);
+            outline-offset: 2px;
+        }
+
+        .lightbox-close {
+            right: 18px;
+            top: 18px;
+        }
+
+        .lightbox-prev {
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .lightbox-next {
+            right: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
         footer {
             color: var(--muted);
             font-size: 0.86rem;
@@ -242,13 +518,89 @@
                 width: 76px;
             }
 
-            .meter {
-                gap: 3px;
-                grid-template-columns: repeat(18, 1fr);
+            .visualizer {
+                height: 52px;
             }
 
-            .bar:nth-child(n+19) {
-                display: none;
+            .screenshot-draft {
+                padding: 10px;
+            }
+
+            .carousel-shell {
+                grid-template-columns: 40px minmax(0, 1fr) 40px;
+            }
+
+            .icon-button {
+                height: 40px;
+                width: 40px;
+            }
+
+            .carousel-phone {
+                max-width: 220px;
+            }
+
+            .strip-track {
+                grid-auto-columns: minmax(150px, 70%);
+            }
+
+            .screenshot-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stack-preview {
+                min-height: 260px;
+                padding: 22px 8px;
+            }
+
+            .stack-stage-row {
+                grid-template-columns: 40px minmax(0, 1fr) 40px;
+            }
+
+            .stack-card {
+                top: 24px;
+                width: 46%;
+            }
+
+            .stack-card img {
+                max-width: 158px;
+            }
+
+            .stack-card[data-stack-position="-1"] {
+                transform: translateX(-104%) rotate(-8deg) translateY(18px) scale(0.86);
+            }
+
+            .stack-card[data-stack-position="0"] {
+                transform: translateX(-50%) rotate(0deg) translateY(-8px) scale(1.03);
+            }
+
+            .stack-card[data-stack-position="1"] {
+                transform: translateX(4%) rotate(8deg) translateY(18px) scale(0.86);
+            }
+
+            .stack-card[data-stack-position="2"],
+            .stack-card[data-stack-position="-2"] {
+                transform: translateX(-50%) rotate(2deg) translateY(32px) scale(0.74);
+            }
+
+            .lightbox {
+                padding: 56px 12px 18px;
+            }
+
+            .lightbox-figure {
+                max-width: 92vw;
+            }
+
+            .lightbox-button {
+                height: 40px;
+                width: 40px;
+            }
+
+            .lightbox-prev {
+                left: 8px;
+            }
+
+            .lightbox-next {
+                right: 8px;
             }
         }
     </style>
@@ -256,25 +608,46 @@
 <body>
     <div class="page">
         <header>
+            <div class="visualizer" aria-hidden="true">
+                <canvas id="fireVisualizer"></canvas>
+            </div>
             <div class="hero">
-                <img class="logo" src="assets/andkon-title-logo-web.png" alt="Andkon logo">
+                <img class="logo" src="assets/app-icon.png" alt="Andkon Voice Recorder app icon">
                 <div>
                     <p class="eyebrow">Free, No Ads!</p>
                     <h1>Andkon Voice Recorder</h1>
                     <p class="lede">A simple voice recorder for saving audio on your Android device.</p>
                 </div>
             </div>
-            <div class="meter" aria-hidden="true">
-                <span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span>
-                <span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span>
-                <span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span>
-                <span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span>
-                <span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span>
-                <span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span>
-            </div>
         </header>
 
         <main>
+            <section id="screenshots">
+                <h2 class="section-title">Screenshots</h2>
+                <div class="section-body">
+                    <div class="stack-gallery" data-stack-gallery>
+                        <div class="stack-stage-row">
+                            <button class="icon-button" type="button" aria-label="Previous screenshot" data-stack-prev>&lt;</button>
+                            <div class="stack-preview" aria-label="Interactive fanned screenshots" tabindex="0" data-stack-stage>
+                                <button class="stack-card is-active" type="button" aria-label="Open recording screenshot" data-stack-card="0" data-stack-position="0" aria-current="true">
+                                    <img src="assets/screen-recording.jpg" alt="Andkon Voice Recorder recording screen">
+                                </button>
+                                <button class="stack-card" type="button" aria-label="Open library screenshot" data-stack-card="1" data-stack-position="1" aria-current="false">
+                                    <img src="assets/screen-library.jpg" alt="Andkon Voice Recorder recordings list">
+                                </button>
+                                <button class="stack-card" type="button" aria-label="Open playback screenshot" data-stack-card="2" data-stack-position="2" aria-current="false">
+                                    <img src="assets/screen-playback.jpg" alt="Andkon Voice Recorder playback screen">
+                                </button>
+                                <button class="stack-card" type="button" aria-label="Open settings screenshot" data-stack-card="3" data-stack-position="-1" aria-current="false">
+                                    <img src="assets/screen-settings.jpg" alt="Andkon Voice Recorder settings screen">
+                                </button>
+                            </div>
+                            <button class="icon-button" type="button" aria-label="Next screenshot" data-stack-next>&gt;</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <section id="privacy">
                 <h2 class="section-title">Privacy Policy</h2>
                 <div class="section-body">
@@ -333,5 +706,248 @@
             <p>&copy; 2026 Andkon. All rights reserved.</p>
         </footer>
     </div>
+    <div class="lightbox" id="screenshotLightbox" hidden aria-modal="true" role="dialog" aria-label="Screenshot zoom viewer">
+        <button class="lightbox-button lightbox-close" type="button" aria-label="Close screenshot viewer" data-lightbox-close>X</button>
+        <button class="lightbox-button lightbox-prev" type="button" aria-label="Previous screenshot" data-lightbox-prev>&lt;</button>
+        <figure class="lightbox-figure">
+            <img id="lightboxImage" src="assets/screen-recording.jpg" alt="Andkon Voice Recorder recording screen">
+            <figcaption id="lightboxCaption" class="screen-caption">Recording</figcaption>
+        </figure>
+        <button class="lightbox-button lightbox-next" type="button" aria-label="Next screenshot" data-lightbox-next>&gt;</button>
+    </div>
+    <script>
+        (() => {
+            const stackSlides = [
+                {
+                    src: "assets/screen-recording.jpg",
+                    alt: "Andkon Voice Recorder recording screen",
+                    caption: "Recording"
+                },
+                {
+                    src: "assets/screen-library.jpg",
+                    alt: "Andkon Voice Recorder recordings list",
+                    caption: "Library"
+                },
+                {
+                    src: "assets/screen-playback.jpg",
+                    alt: "Andkon Voice Recorder playback screen",
+                    caption: "Playback"
+                },
+                {
+                    src: "assets/screen-settings.jpg",
+                    alt: "Andkon Voice Recorder settings screen",
+                    caption: "Settings"
+                }
+            ];
+
+            const gallery = document.querySelector("[data-stack-gallery]");
+            const stage = document.querySelector("[data-stack-stage]");
+            const cards = Array.from(document.querySelectorAll("[data-stack-card]"));
+            const previous = document.querySelector("[data-stack-prev]");
+            const next = document.querySelector("[data-stack-next]");
+            const lightbox = document.getElementById("screenshotLightbox");
+            const lightboxImage = document.getElementById("lightboxImage");
+            const lightboxCaption = document.getElementById("lightboxCaption");
+            const lightboxClose = document.querySelector("[data-lightbox-close]");
+            const lightboxPrevious = document.querySelector("[data-lightbox-prev]");
+            const lightboxNext = document.querySelector("[data-lightbox-next]");
+            let current = 0;
+            let startX = 0;
+            let didSwipe = false;
+            let suppressClickUntil = 0;
+
+            function stackOffset(index) {
+                let offset = (index - current + cards.length) % cards.length;
+                if (offset > cards.length / 2) offset -= cards.length;
+                return offset;
+            }
+
+            function updateLightbox() {
+                const slide = stackSlides[current];
+                lightboxImage.src = slide.src;
+                lightboxImage.alt = slide.alt;
+                lightboxCaption.textContent = slide.caption;
+            }
+
+            function showStack(index) {
+                current = (index + cards.length) % cards.length;
+                cards.forEach((card, cardIndex) => {
+                    const position = stackOffset(cardIndex);
+                    card.dataset.stackPosition = String(position);
+                    card.classList.toggle("is-active", cardIndex === current);
+                    card.setAttribute("aria-current", cardIndex === current ? "true" : "false");
+                });
+                if (!lightbox.hidden) updateLightbox();
+            }
+
+            function openLightbox() {
+                updateLightbox();
+                lightbox.hidden = false;
+                document.body.classList.add("is-lightbox-open");
+                lightboxClose.focus();
+            }
+
+            function closeLightbox() {
+                lightbox.hidden = true;
+                document.body.classList.remove("is-lightbox-open");
+                stage.focus();
+            }
+
+            previous.addEventListener("click", () => showStack(current + 1));
+            next.addEventListener("click", () => showStack(current - 1));
+            cards.forEach((card) => {
+                card.addEventListener("click", () => {
+                    if (didSwipe || Date.now() < suppressClickUntil) return;
+                    const index = Number(card.dataset.stackCard);
+                    if (index === current) {
+                        openLightbox();
+                    } else {
+                        showStack(index);
+                    }
+                });
+            });
+
+            stage.addEventListener("keydown", (event) => {
+                if (event.key === "ArrowLeft") {
+                    event.preventDefault();
+                    showStack(current + 1);
+                }
+                if (event.key === "ArrowRight") {
+                    event.preventDefault();
+                    showStack(current - 1);
+                }
+                if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    openLightbox();
+                }
+            });
+
+            stage.addEventListener("pointerdown", (event) => {
+                startX = event.clientX;
+                didSwipe = false;
+            });
+
+            stage.addEventListener("pointerup", (event) => {
+                const deltaX = event.clientX - startX;
+                if (Math.abs(deltaX) > 44) {
+                    didSwipe = true;
+                    suppressClickUntil = Date.now() + 280;
+                    showStack(deltaX < 0 ? current + 1 : current - 1);
+                    window.setTimeout(() => {
+                        didSwipe = false;
+                    }, 280);
+                    return;
+                }
+
+                const card = event.target.closest("[data-stack-card]");
+                if (card) {
+                    suppressClickUntil = Date.now() + 280;
+                    const index = Number(card.dataset.stackCard);
+                    if (index === current) {
+                        openLightbox();
+                    } else {
+                        showStack(index);
+                    }
+                }
+            });
+
+            lightboxClose.addEventListener("click", closeLightbox);
+            lightboxPrevious.addEventListener("click", () => showStack(current + 1));
+            lightboxNext.addEventListener("click", () => showStack(current - 1));
+            lightbox.addEventListener("click", (event) => {
+                if (event.target === lightbox) closeLightbox();
+            });
+            document.addEventListener("keydown", (event) => {
+                if (lightbox.hidden) return;
+                if (event.key === "Escape") closeLightbox();
+                if (event.key === "ArrowLeft") showStack(current + 1);
+                if (event.key === "ArrowRight") showStack(current - 1);
+            });
+
+            gallery.addEventListener("pointercancel", () => {
+                didSwipe = false;
+            });
+
+            showStack(0);
+        })();
+
+        (() => {
+            const canvas = document.getElementById("fireVisualizer");
+            const context = canvas.getContext("2d");
+            const rootStyle = getComputedStyle(document.documentElement);
+            const yellow = rootStyle.getPropertyValue("--yellow").trim() || "#ffd700";
+            const orange = rootStyle.getPropertyValue("--orange").trim() || "#ff9900";
+            const black = rootStyle.getPropertyValue("--black").trim() || "#000000";
+            const columns = 42;
+            let width = 0;
+            let height = 0;
+            let pixelRatio = 1;
+
+            function resize() {
+                const rect = canvas.getBoundingClientRect();
+                pixelRatio = Math.max(1, window.devicePixelRatio || 1);
+                width = Math.max(1, rect.width);
+                height = Math.max(1, rect.height);
+                canvas.width = Math.floor(width * pixelRatio);
+                canvas.height = Math.floor(height * pixelRatio);
+                context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+            }
+
+            function draw(timestamp) {
+                const phase = timestamp * 0.00018;
+                const columnWidth = width / columns;
+
+                context.clearRect(0, 0, width, height);
+                context.fillStyle = black;
+                context.fillRect(0, 0, width, height);
+
+                for (let i = 0; i < columns; i += 1) {
+                    const normalizedX = i / columns;
+                    const centerDistance = Math.abs(normalizedX - 0.5) * 2;
+                    const centerFalloff = 1 - centerDistance * centerDistance;
+                    const flicker1 = Math.sin(phase * 8 + i * 0.9) * 0.3;
+                    const flicker2 = Math.sin(phase * 13 + i * 1.7) * 0.15;
+                    const flicker3 = Math.cos(phase * 6 + i * 2.3) * 0.1;
+                    const pulse = 0.58 + Math.sin(phase * 3 + i * 0.23) * 0.08;
+                    const energy = Math.max(0.1, Math.min(1.2, pulse + flicker1 + flicker2 + flicker3));
+                    const flameHeight = height * 0.9 * centerFalloff * energy + height * 0.05;
+                    const x = i * columnWidth;
+                    const top = height - flameHeight;
+
+                    const gradient = context.createLinearGradient(0, top, 0, height);
+                    gradient.addColorStop(0, "rgba(255, 215, 0, 0)");
+                    gradient.addColorStop(0.32, "rgba(255, 215, 0, 0.48)");
+                    gradient.addColorStop(0.68, "rgba(255, 153, 0, 0.84)");
+                    gradient.addColorStop(1, orange);
+
+                    context.shadowBlur = 10;
+                    context.shadowColor = "rgba(255, 153, 0, 0.35)";
+                    context.fillStyle = gradient;
+                    context.fillRect(x, top, columnWidth + 1, flameHeight);
+
+                    context.shadowBlur = 0;
+                    context.fillStyle = "rgba(255, 255, 255, 0.12)";
+                    context.fillRect(x + columnWidth * 0.46, top + flameHeight * 0.18, 1, flameHeight * 0.58);
+                }
+
+                const coreWidth = width * 0.34;
+                const coreHeight = height * 0.2;
+                const core = context.createLinearGradient(0, height - coreHeight, 0, height);
+                core.addColorStop(0, "rgba(255, 255, 255, 0)");
+                core.addColorStop(1, "rgba(255, 255, 255, 0.22)");
+                context.fillStyle = core;
+                context.fillRect((width - coreWidth) / 2, height - coreHeight, coreWidth, coreHeight);
+
+                context.fillStyle = yellow;
+                context.fillRect(0, height - 3, width, 3);
+
+                requestAnimationFrame(draw);
+            }
+
+            resize();
+            window.addEventListener("resize", resize);
+            requestAnimationFrame(draw);
+        })();
+    </script>
 </body>
 </html>
