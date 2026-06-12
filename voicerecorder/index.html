@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Andkon Voice Recorder</title>
     <meta name="description" content="Andkon Voice Recorder project page and privacy policy.">
+    <link rel="icon" type="image/png" href="assets/app-icon.png">
     <style>
         :root {
             --yellow: #ffd700;
@@ -61,8 +62,8 @@
 
         header {
             background: var(--panel);
-            border: 2px solid var(--border);
-            box-shadow: inset 0 0 0 1px var(--inset);
+            border: 1px solid var(--inset);
+            margin: 0 1px;
         }
 
         .hero {
@@ -110,7 +111,6 @@
 
         .visualizer {
             background: var(--black);
-            border-bottom: 2px solid var(--border);
             height: 64px;
             overflow: hidden;
             position: relative;
@@ -134,6 +134,7 @@
             display: grid;
             gap: 14px;
             margin-top: 14px;
+            padding: 0 1px;
         }
 
         section {
@@ -144,7 +145,6 @@
 
         .section-title {
             background: var(--yellow);
-            border-bottom: 2px solid var(--border);
             color: var(--black);
             font-size: 0.95rem;
             font-weight: 900;
@@ -202,6 +202,44 @@
 
         .muted {
             color: var(--muted);
+        }
+
+        .feature-list {
+            margin-top: 4px;
+        }
+
+        .feature-callout {
+            background: var(--row);
+            border: 2px solid var(--border);
+            margin: 0 0 12px;
+            padding: 9px 10px;
+        }
+
+        .feature-graphic {
+            margin: 16px auto 0;
+            max-width: 760px;
+        }
+
+        .feature-graphic img {
+            border: 2px solid var(--border);
+            display: block;
+            height: auto;
+            width: 100%;
+        }
+
+        .link-list {
+            margin-bottom: 0;
+        }
+
+        .link-list li {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .link-label {
+            color: var(--text);
+            font-weight: 400;
         }
 
         .screenshot-options {
@@ -496,13 +534,6 @@
             transform: translateY(-50%);
         }
 
-        footer {
-            color: var(--muted);
-            font-size: 0.86rem;
-            padding: 22px 2px 0;
-            text-align: center;
-        }
-
         @media (max-width: 620px) {
             .page {
                 padding: 12px 10px 32px;
@@ -622,6 +653,29 @@
         </header>
 
         <main>
+            <section id="overview">
+                <h2 class="section-title">Overview &amp; App Store Links</h2>
+                <div class="section-body">
+                    <p>Andkon Voice Recorder is a simple voice recorder: open the app, press record, and save your recording. That's it. No accounts, no ads, no analytics, and no extra clutter.</p>
+
+                    <h3>Features</h3>
+                    <ul class="feature-list">
+                        <li>Record audio from your microphone; recording continues in background</li>
+                        <li>Save recordings to your phone in m4a format: Recordings/AndkonVoiceRecorder (or Music/AndkonVoiceRecorder on older phones)</li>
+                        <li>Play recordings inside the app</li>
+                        <li>Rename, share, and delete recordings</li>
+                        <li>Default file name: yyyy-mm-dd-hh-mm-ss</li>
+                        <li>Simple settings for recording quality and more</li>
+                    </ul>
+
+                    <p class="feature-callout"><strong>Privacy friendly:</strong> Andkon Voice Recorder does not upload your recordings. Recordings are saved on your device as audio files. The app does not use ads, analytics, or accounts.</p>
+
+                    <figure class="feature-graphic">
+                        <img src="assets/featured-graphic.png" alt="Andkon Voice Recorder feature graphic">
+                    </figure>
+                </div>
+            </section>
+
             <section id="screenshots">
                 <h2 class="section-title">Screenshots</h2>
                 <div class="section-body">
@@ -700,11 +754,31 @@
                     <p>For questions about Andkon Voice Recorder or this privacy policy, contact <a href="mailto:andkon@andkon.com">andkon@andkon.com</a>.</p>
                 </div>
             </section>
-        </main>
 
-        <footer>
-            <p>&copy; 2026 Andkon. All rights reserved.</p>
-        </footer>
+            <section id="trademark">
+                <h2 class="section-title">Trademark Notice</h2>
+                <div class="section-body">
+                    <p>"Andkon" and the anthropomorphic Andkon logo are registered trademarks. All rights reserved.</p>
+                </div>
+            </section>
+
+            <section id="no-warranty">
+                <h2 class="section-title">No Warranty</h2>
+                <div class="section-body">
+                    <p>The App is provided "as is" and "as available," without warranties of any kind, either express or implied. To the fullest extent permitted by law, we disclaim all warranties, including implied warranties of merchantability, fitness for a particular purpose, non-infringement, accuracy, reliability, availability, and uninterrupted or error-free operation. Your use of the App is at your own risk.</p>
+                </div>
+            </section>
+
+            <section id="support-links">
+                <h2 class="section-title">Support and Links</h2>
+                <div class="section-body">
+                    <ul class="link-list">
+                        <li><span class="link-label">Email/PayPal/Tips:</span> <a href="mailto:andkon@andkon.com">andkon@andkon.com</a></li>
+                        <li><span class="link-label">Developer site:</span> <a href="https://andkon.dev/">andkon.dev</a></li>
+                    </ul>
+                </div>
+            </section>
+        </main>
     </div>
     <div class="lightbox" id="screenshotLightbox" hidden aria-modal="true" role="dialog" aria-label="Screenshot zoom viewer">
         <button class="lightbox-button lightbox-close" type="button" aria-label="Close screenshot viewer" data-lightbox-close>X</button>
