@@ -151,7 +151,7 @@
             flex-direction: column;
             padding: 3px;
             position: absolute;
-            width: min(420px, calc(100vw - 170px));
+            width: min(520px, calc(100vw - 170px));
             min-width: 280px;
             z-index: 3;
         }
@@ -422,6 +422,11 @@
             max-height: 32px;
         }
 
+        .swim-timer-icon {
+            border-radius: 4px;
+            object-fit: cover;
+        }
+
         @media (max-width: 700px) {
             .desktop {
                 padding: 12px 12px calc(var(--taskbar-height) + 12px);
@@ -532,6 +537,18 @@
                         top: 90
                     },
                     url: "https://andkon.dev/license-plate-tracker/"
+                },
+                {
+                    id: "swim-timer",
+                    icon: "assets/swim-logo.png",
+                    imageClass: "swim-timer-icon",
+                    label: "Andkon's Swim Timer",
+                    openInNewTab: true,
+                    position: {
+                        left: 0,
+                        top: 180
+                    },
+                    url: "https://andkon.dev/swim-timer/"
                 }
             ];
             let icons = [];
