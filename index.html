@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>andkon.dev 98</title>
+    <title>andkon.dev - andkon's dev site</title>
     <style>
         :root {
             --desktop: #008080;
@@ -142,6 +142,22 @@
             background: var(--selection);
             color: var(--selection-text);
             text-shadow: none;
+        }
+
+        .desktop-icon.pinned-shortcut {
+            bottom: 0;
+            left: auto;
+            right: 0;
+            top: auto;
+        }
+
+        .github-icon {
+            height: 32px;
+            width: 32px;
+        }
+
+        .desktop-icon.pinned-shortcut .label {
+            white-space: nowrap;
         }
 
         .window {
@@ -513,6 +529,12 @@
             const iconLaneGap = 24;
             const minimumVisibleWindow = 120;
             const startupWindowTopOffset = 38;
+            const githubShortcut = {
+                id: "github-profile",
+                label: "/andkondev",
+                openInNewTab: true,
+                url: "https://github.com/andkondev"
+            };
             const projects = [
                 {
                     id: "grokipedia-split",
@@ -581,6 +603,47 @@
                 return button;
             }
 
+            function createGithubMark() {
+                const svgNamespace = "http://www.w3.org/2000/svg";
+                const svg = document.createElementNS(svgNamespace, "svg");
+                const path = document.createElementNS(svgNamespace, "path");
+
+                svg.setAttribute("aria-hidden", "true");
+                svg.setAttribute("class", "icon-asset desktop-project-icon github-icon");
+                svg.setAttribute("focusable", "false");
+                svg.setAttribute("viewBox", "0 0 16 16");
+
+                path.setAttribute("fill", "#111111");
+                path.setAttribute("d", "M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.67 7.67 0 0 1 4 0c1.53-1.03 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z");
+                svg.appendChild(path);
+
+                return svg;
+            }
+
+            function createGithubShortcut() {
+                const button = document.createElement("button");
+                const frame = document.createElement("span");
+                const image = createGithubMark();
+                const label = document.createElement("span");
+
+                button.className = "desktop-icon pinned-shortcut";
+                button.dataset.projectId = githubShortcut.id;
+                button.dataset.target = githubShortcut.url;
+                button.dataset.targetBlank = String(githubShortcut.openInNewTab);
+                button.setAttribute("aria-label", "Open /andkondev on GitHub");
+                button.type = "button";
+
+                frame.className = "icon-frame";
+                frame.setAttribute("aria-hidden", "true");
+
+                label.className = "label";
+                label.textContent = githubShortcut.label;
+
+                frame.appendChild(image);
+                button.append(frame, label);
+                return button;
+            }
+
             function createWindowAction(project) {
                 const link = document.createElement("a");
                 const label = document.createElement("span");
@@ -607,6 +670,7 @@
                     desktopIconFragment.appendChild(createProjectIcon(project));
                     windowActionFragment.appendChild(createWindowAction(project));
                 });
+                desktopIconFragment.appendChild(createGithubShortcut());
 
                 desktopIcons.replaceChildren(desktopIconFragment);
                 windowActions.replaceChildren(windowActionFragment);
@@ -624,7 +688,9 @@
             }
 
             function getIconLaneRight() {
-                return icons.reduce(function (maxRight, icon) {
+                return icons.filter(function (icon) {
+                    return !icon.classList.contains("pinned-shortcut");
+                }).reduce(function (maxRight, icon) {
                     return Math.max(maxRight, desktopIcons.offsetLeft + icon.offsetLeft + icon.offsetWidth);
                 }, desktopIcons.offsetLeft);
             }
@@ -694,6 +760,7 @@
                     const nextTop = clamp(dragState.originTop + deltaY, bounds.minTop, bounds.maxTop);
 
                     element.style.right = "auto";
+                    element.style.bottom = "auto";
                     element.style.left = nextLeft + "px";
                     element.style.top = nextTop + "px";
 
