@@ -24,6 +24,9 @@
             --selection: #000080;
             --selection-text: #ffffff;
             --element-spacing: 8px;
+            --desktop-inline-gutter: 18px;
+            --desktop-block-gutter: 18px;
+            --viewport-bottom-inset: env(safe-area-inset-bottom, 0px);
             --border-raised-outer:
                 inset -1px -1px var(--window-frame),
                 inset 1px 1px var(--button-highlight);
@@ -78,11 +81,20 @@
             overflow: clip;
             position: relative;
             min-height: 100vh;
-            padding: 16px 18px calc(var(--taskbar-height) + 18px);
+            min-height: 100svh;
+            min-height: 100dvh;
+            padding:
+                var(--desktop-block-gutter)
+                var(--desktop-inline-gutter)
+                calc(var(--taskbar-height) + var(--desktop-block-gutter) + var(--viewport-bottom-inset));
         }
 
         .desktop-icons {
-            inset: 16px 18px calc(var(--taskbar-height) + 18px) 18px;
+            inset:
+                var(--desktop-block-gutter)
+                var(--desktop-inline-gutter)
+                calc(var(--taskbar-height) + var(--desktop-block-gutter) + var(--viewport-bottom-inset))
+                var(--desktop-inline-gutter);
             position: absolute;
         }
 
@@ -145,9 +157,10 @@
         }
 
         .desktop-icon.pinned-shortcut {
-            bottom: 0;
+            bottom: calc(var(--taskbar-height) + var(--desktop-block-gutter) + var(--viewport-bottom-inset));
             left: auto;
-            right: 0;
+            position: fixed;
+            right: var(--desktop-inline-gutter);
             top: auto;
         }
 
@@ -443,12 +456,9 @@
         }
 
         @media (max-width: 700px) {
-            .desktop {
-                padding: 12px 12px calc(var(--taskbar-height) + 12px);
-            }
-
-            .desktop-icons {
-                inset: 12px 12px calc(var(--taskbar-height) + 12px) 12px;
+            :root {
+                --desktop-inline-gutter: 12px;
+                --desktop-block-gutter: 12px;
             }
 
             .task-button {
