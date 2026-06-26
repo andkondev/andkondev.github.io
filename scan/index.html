@@ -1,0 +1,790 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101820">
+  <title>Protein Scan</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f4ee;
+      --ink: #101820;
+      --muted: #687076;
+      --line: #d7d2c8;
+      --panel: #fffdf8;
+      --accent: #0f7b6c;
+      --accent-dark: #075e54;
+      --warn: #a64620;
+      --good: #0b6a37;
+      --shadow: 0 18px 50px rgba(20, 24, 28, 0.14);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      min-height: 100%;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0;
+    }
+
+    button {
+      font: inherit;
+    }
+
+    .app {
+      min-height: 100svh;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 18px clamp(16px, 4vw, 34px);
+      border-bottom: 1px solid rgba(16, 24, 32, 0.08);
+      background: rgba(255, 253, 248, 0.78);
+      backdrop-filter: blur(12px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .mark {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      flex: 0 0 auto;
+    }
+
+    .mark svg {
+      width: 22px;
+      height: 22px;
+      display: block;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(20px, 4vw, 27px);
+      line-height: 1.05;
+      font-weight: 760;
+    }
+
+    .source {
+      color: var(--muted);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    main {
+      width: min(1120px, 100%);
+      margin: 0 auto;
+      padding: clamp(16px, 4vw, 34px);
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
+      gap: clamp(18px, 4vw, 34px);
+      align-items: start;
+    }
+
+    .scanner,
+    .result {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .scanner {
+      min-height: 520px;
+      display: grid;
+      grid-template-rows: minmax(360px, 1fr) auto;
+    }
+
+    .camera {
+      position: relative;
+      min-height: 360px;
+      background: #121619;
+      overflow: hidden;
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      min-height: 360px;
+      object-fit: cover;
+      display: block;
+      background: #121619;
+    }
+
+    .guide {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      pointer-events: none;
+    }
+
+    .frame {
+      width: min(76%, 440px);
+      aspect-ratio: 2.3 / 1;
+      border: 3px solid rgba(255, 255, 255, 0.88);
+      border-radius: 8px;
+      box-shadow: 0 0 0 999px rgba(0, 0, 0, 0.30);
+    }
+
+    .idle {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 28px;
+      text-align: center;
+      color: #f8f4ea;
+      background: #121619;
+    }
+
+    .idle[hidden] {
+      display: none;
+    }
+
+    .idle-title {
+      font-size: clamp(24px, 6vw, 42px);
+      line-height: 1;
+      font-weight: 780;
+      margin-bottom: 12px;
+    }
+
+    .idle-text {
+      color: rgba(248, 244, 234, 0.76);
+      font-size: 15px;
+      line-height: 1.45;
+      max-width: 32em;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 16px;
+      border-top: 1px solid var(--line);
+    }
+
+    .status {
+      min-width: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    .status strong {
+      color: var(--ink);
+      font-weight: 680;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex: 0 0 auto;
+    }
+
+    .btn {
+      min-height: 44px;
+      border: 0;
+      border-radius: 8px;
+      padding: 0 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      color: #fff;
+      background: var(--accent);
+      font-weight: 700;
+    }
+
+    .btn:hover {
+      background: var(--accent-dark);
+    }
+
+    .btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+
+    .btn.secondary {
+      color: var(--ink);
+      background: transparent;
+      border: 1px solid var(--line);
+    }
+
+    .btn.secondary:hover {
+      background: #f0ece3;
+    }
+
+    .btn svg {
+      width: 18px;
+      height: 18px;
+      flex: 0 0 auto;
+    }
+
+    .result {
+      min-height: 520px;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    .result-head {
+      display: grid;
+      grid-template-columns: 88px minmax(0, 1fr);
+      gap: 14px;
+      padding: 18px;
+      border-bottom: 1px solid var(--line);
+      align-items: center;
+    }
+
+    .product-img {
+      width: 88px;
+      height: 88px;
+      border-radius: 8px;
+      object-fit: cover;
+      background: #ece7dc;
+      border: 1px solid var(--line);
+    }
+
+    .product-img[hidden] {
+      display: none;
+    }
+
+    .placeholder-img {
+      width: 88px;
+      height: 88px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: #ece7dc;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+    }
+
+    .placeholder-img[hidden] {
+      display: none;
+    }
+
+    .placeholder-img svg {
+      width: 34px;
+      height: 34px;
+    }
+
+    .product-title {
+      margin: 0 0 5px;
+      font-size: clamp(19px, 4vw, 25px);
+      line-height: 1.12;
+      font-weight: 760;
+      overflow-wrap: anywhere;
+    }
+
+    .product-meta {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+
+    .metrics {
+      padding: 18px;
+      display: grid;
+      gap: 14px;
+      align-content: start;
+    }
+
+    .metric-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #faf7f0;
+      align-items: center;
+    }
+
+    .metric-label {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.25;
+    }
+
+    .metric-value {
+      text-align: right;
+      font-size: clamp(25px, 6vw, 40px);
+      line-height: 1;
+      font-weight: 820;
+      white-space: nowrap;
+    }
+
+    .metric-unit {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 4px;
+      text-align: right;
+    }
+
+    .raw {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .raw-item {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fffdf8;
+    }
+
+    .raw-label {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.2;
+      margin-bottom: 6px;
+    }
+
+    .raw-value {
+      font-size: 17px;
+      font-weight: 730;
+      overflow-wrap: anywhere;
+    }
+
+    .notice {
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--muted);
+      line-height: 1.45;
+      background: #fffdf8;
+      font-size: 14px;
+    }
+
+    .notice.warn {
+      color: var(--warn);
+      border-color: rgba(166, 70, 32, 0.35);
+      background: #fff6ef;
+    }
+
+    .notice.good {
+      color: var(--good);
+      border-color: rgba(11, 106, 55, 0.28);
+      background: #f0fff5;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    @media (max-width: 860px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+
+      .scanner,
+      .result {
+        min-height: auto;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .source {
+        white-space: normal;
+      }
+
+      .scanner {
+        grid-template-rows: minmax(330px, 58svh) auto;
+      }
+
+      .camera,
+      video {
+        min-height: 330px;
+      }
+
+      .controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .actions {
+        width: 100%;
+      }
+
+      .btn {
+        flex: 1;
+      }
+
+      .result-head {
+        grid-template-columns: 72px minmax(0, 1fr);
+      }
+
+      .product-img,
+      .placeholder-img {
+        width: 72px;
+        height: 72px;
+      }
+
+      .metric-row {
+        grid-template-columns: 1fr;
+      }
+
+      .metric-value,
+      .metric-unit {
+        text-align: left;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M4 7V5h2m12 0h2v2M6 19H4v-2m16 0v2h-2M7 9h1m2 0h1m3 0h3M7 12h4m3 0h3M7 15h2m3 0h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <h1>Protein Scan</h1>
+      </div>
+      <div class="source">Open Food Facts lookup</div>
+    </header>
+
+    <main>
+      <section class="scanner" aria-label="Barcode scanner">
+        <div class="camera">
+          <video id="video" muted playsinline></video>
+          <div class="guide" aria-hidden="true">
+            <div class="frame"></div>
+          </div>
+          <div class="idle" id="idle">
+            <div>
+              <div class="idle-title">UPC</div>
+              <div class="idle-text">Camera access starts after tapping scan. Barcode reading happens on this device.</div>
+            </div>
+          </div>
+        </div>
+        <div class="controls">
+          <div class="status" id="status"><strong>Ready.</strong> Waiting for camera.</div>
+          <div class="actions">
+            <button class="btn" id="startBtn" type="button">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Scan
+            </button>
+            <button class="btn secondary" id="stopBtn" type="button" disabled>
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M8 8h8v8H8z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>
+              </svg>
+              Stop
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="result" aria-live="polite">
+        <div class="result-head">
+          <img class="product-img" id="productImg" alt="" hidden>
+          <div class="placeholder-img" id="placeholderImg" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M6 5h12v14H6zM9 8h6M9 11h6M9 14h3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div>
+            <p class="product-title" id="productTitle">No product yet</p>
+            <div class="product-meta" id="productMeta">Scan a UPC or EAN code.</div>
+          </div>
+        </div>
+
+        <div class="metrics">
+          <div class="metric-row">
+            <div class="metric-label">Protein percentage</div>
+            <div>
+              <div class="metric-value" id="proteinPercent">--</div>
+              <div class="metric-unit">% of calories from protein</div>
+            </div>
+          </div>
+
+          <div class="metric-row">
+            <div class="metric-label">Energy density</div>
+            <div>
+              <div class="metric-value" id="energyDensity">--</div>
+              <div class="metric-unit">kcal/g</div>
+            </div>
+          </div>
+
+          <div class="raw">
+            <div class="raw-item">
+              <div class="raw-label">Protein</div>
+              <div class="raw-value" id="proteinRaw">--</div>
+            </div>
+            <div class="raw-item">
+              <div class="raw-label">Energy</div>
+              <div class="raw-value" id="energyRaw">--</div>
+            </div>
+          </div>
+
+          <div class="notice" id="notice">Results use per-100g nutrition fields when available.</div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://unpkg.com/@zxing/browser@0.2.0/umd/zxing-browser.min.js"></script>
+  <script>
+    const video = document.getElementById("video");
+    const idle = document.getElementById("idle");
+    const statusEl = document.getElementById("status");
+    const startBtn = document.getElementById("startBtn");
+    const stopBtn = document.getElementById("stopBtn");
+    const productImg = document.getElementById("productImg");
+    const placeholderImg = document.getElementById("placeholderImg");
+    const productTitle = document.getElementById("productTitle");
+    const productMeta = document.getElementById("productMeta");
+    const proteinPercentEl = document.getElementById("proteinPercent");
+    const energyDensityEl = document.getElementById("energyDensity");
+    const proteinRawEl = document.getElementById("proteinRaw");
+    const energyRawEl = document.getElementById("energyRaw");
+    const noticeEl = document.getElementById("notice");
+
+    let reader = null;
+    let controls = null;
+    let lastBarcode = "";
+    let lookupBusy = false;
+
+    function setStatus(strong, text = "") {
+      statusEl.innerHTML = `<strong>${escapeHtml(strong)}</strong>${text ? " " + escapeHtml(text) : ""}`;
+    }
+
+    function setNotice(text, type = "") {
+      noticeEl.textContent = text;
+      noticeEl.className = `notice${type ? " " + type : ""}`;
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;",
+      }[char]));
+    }
+
+    function formatNumber(value, digits = 1) {
+      if (!Number.isFinite(value)) return "--";
+      return value.toLocaleString(undefined, {
+        maximumFractionDigits: digits,
+        minimumFractionDigits: digits,
+      });
+    }
+
+    function normalizeBarcode(raw) {
+      return String(raw || "").replace(/\D/g, "");
+    }
+
+    function getKcal100g(nutriments) {
+      const kcal = Number(nutriments["energy-kcal_100g"]);
+      if (Number.isFinite(kcal) && kcal >= 0) return kcal;
+
+      const kj = Number(nutriments.energy_100g);
+      if (Number.isFinite(kj) && kj >= 0) return kj / 4.184;
+
+      return NaN;
+    }
+
+    function getProtein100g(nutriments) {
+      const protein = Number(nutriments.proteins_100g);
+      return Number.isFinite(protein) && protein >= 0 ? protein : NaN;
+    }
+
+    function showEmptyProduct(title, meta) {
+      productTitle.textContent = title;
+      productMeta.textContent = meta;
+      productImg.hidden = true;
+      productImg.removeAttribute("src");
+      placeholderImg.hidden = false;
+      proteinPercentEl.textContent = "--";
+      energyDensityEl.textContent = "--";
+      proteinRawEl.textContent = "--";
+      energyRawEl.textContent = "--";
+    }
+
+    function showProduct(product, barcode) {
+      const nutriments = product.nutriments || {};
+      const protein100g = getProtein100g(nutriments);
+      const kcal100g = getKcal100g(nutriments);
+      const hasProtein = Number.isFinite(protein100g);
+      const hasEnergy = Number.isFinite(kcal100g) && kcal100g > 0;
+      const proteinPercent = hasProtein && hasEnergy ? (protein100g * 4 * 100) / kcal100g : NaN;
+      const energyDensity = hasEnergy ? kcal100g / 100 : NaN;
+
+      productTitle.textContent = product.product_name || "Unnamed product";
+      productMeta.textContent = [
+        product.brands,
+        product.quantity || product.serving_size,
+        barcode,
+      ].filter(Boolean).join(" · ");
+
+      if (product.image_front_url) {
+        productImg.src = product.image_front_url;
+        productImg.hidden = false;
+        placeholderImg.hidden = true;
+      } else {
+        productImg.hidden = true;
+        productImg.removeAttribute("src");
+        placeholderImg.hidden = false;
+      }
+
+      proteinPercentEl.textContent = Number.isFinite(proteinPercent) ? `${formatNumber(proteinPercent, 1)}%` : "--";
+      energyDensityEl.textContent = Number.isFinite(energyDensity) ? formatNumber(energyDensity, 2) : "--";
+      proteinRawEl.textContent = hasProtein ? `${formatNumber(protein100g, 1)} g/100g` : "--";
+      energyRawEl.textContent = Number.isFinite(kcal100g) ? `${formatNumber(kcal100g, 0)} kcal/100g` : "--";
+
+      if (!hasProtein || !Number.isFinite(kcal100g)) {
+        setNotice("Product found, but protein or calorie data is missing.", "warn");
+      } else if (kcal100g === 0) {
+        setNotice("Product found with zero calories per 100g; protein percentage cannot be calculated.", "warn");
+      } else {
+        setNotice("Calculated from Open Food Facts per-100g nutrition fields.", "good");
+      }
+    }
+
+    async function lookupBarcode(barcode) {
+      if (!barcode || lookupBusy) return;
+      lookupBusy = true;
+      setStatus("Found code.", barcode);
+
+      try {
+        const fields = [
+          "code",
+          "product_name",
+          "brands",
+          "quantity",
+          "serving_size",
+          "image_front_url",
+          "nutriments",
+        ].join(",");
+        const url = `https://world.openfoodfacts.org/api/v3/product/${encodeURIComponent(barcode)}.json?fields=${fields}`;
+        const response = await fetch(url, {
+          headers: {
+            "X-User-Agent": "andkon.dev/scan - personal prototype",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Open Food Facts returned ${response.status}`);
+        }
+
+        const data = await response.json();
+        if (!data.product) {
+          showEmptyProduct("Not found", barcode);
+          setNotice("No Open Food Facts product matched this barcode.", "warn");
+          return;
+        }
+
+        showProduct(data.product, data.code || barcode);
+      } catch (error) {
+        showEmptyProduct("Lookup failed", barcode);
+        setNotice(error.message || "Could not fetch product data.", "warn");
+      } finally {
+        lookupBusy = false;
+        setStatus("Ready.", "Tap scan for another product.");
+      }
+    }
+
+    function stopScanner() {
+      if (controls) {
+        controls.stop();
+        controls = null;
+      }
+      if (window.ZXingBrowser?.BrowserCodeReader) {
+        window.ZXingBrowser.BrowserCodeReader.releaseAllStreams();
+      }
+      idle.hidden = false;
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+    }
+
+    async function startScanner() {
+      if (!window.ZXingBrowser) {
+        setNotice("Barcode scanner library did not load.", "warn");
+        return;
+      }
+
+      if (!navigator.mediaDevices?.getUserMedia) {
+        setNotice("This browser does not expose camera access here.", "warn");
+        return;
+      }
+
+      stopScanner();
+      lastBarcode = "";
+      startBtn.disabled = true;
+      stopBtn.disabled = false;
+      idle.hidden = true;
+      setStatus("Scanning.", "Center the barcode.");
+
+      try {
+        reader = new window.ZXingBrowser.BrowserMultiFormatOneDReader(undefined, {
+          delayBetweenScanAttempts: 180,
+          delayBetweenScanSuccess: 800,
+        });
+
+        controls = await reader.decodeFromVideoDevice(null, video, (result, error) => {
+          if (!result || lookupBusy) return;
+
+          const barcode = normalizeBarcode(result.getText());
+          if (!barcode || barcode === lastBarcode) return;
+          lastBarcode = barcode;
+
+          stopScanner();
+          lookupBarcode(barcode);
+        });
+      } catch (error) {
+        stopScanner();
+        setStatus("Camera stopped.");
+        setNotice(error.message || "Camera permission or barcode scanner failed.", "warn");
+      }
+    }
+
+    startBtn.addEventListener("click", startScanner);
+    stopBtn.addEventListener("click", () => {
+      stopScanner();
+      setStatus("Stopped.");
+    });
+
+    window.addEventListener("pagehide", stopScanner);
+  </script>
+</body>
+</html>
