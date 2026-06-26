@@ -724,7 +724,7 @@
         const data = await fetchProduct(barcode, fields);
         if (!data.product) {
           showEmptyProduct("Not found", barcode);
-          setNotice("No Open Food Facts product matched this barcode.", "warn");
+          setNotice("Barcode read, but Open Food Facts does not have this product yet.", "warn");
           return;
         }
 
@@ -749,6 +749,10 @@
           },
         });
 
+        if (response.status === 404) {
+          continue;
+        }
+
         if (!response.ok) {
           throw new Error(`Open Food Facts returned ${response.status}`);
         }
@@ -757,7 +761,7 @@
         if (data.product || code === candidates[candidates.length - 1]) return data;
       }
 
-      return {};
+      return { notFound: true };
     }
 
     function stopScanner() {
