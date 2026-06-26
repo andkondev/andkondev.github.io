@@ -580,6 +580,11 @@
 
     let reader = null;
     let controls = null;
+    let scanTimer = null;
+    let nativeFrame = null;
+    let activeStream = null;
+    let framesChecked = 0;
+    let scanStartedAt = 0;
     let lastBarcode = "";
     let lookupBusy = false;
 
@@ -612,6 +617,26 @@
 
     function normalizeBarcode(raw) {
       return String(raw || "").replace(/\D/g, "");
+    }
+
+    function cameraConstraints() {
+      return {
+        video: {
+          facingMode: { ideal: "environment" },
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+        },
+        audio: false,
+      };
+    }
+
+    function startScanTimer(mode) {
+      clearInterval(scanTimer);
+      framesChecked = 0;
+      scanTimer = setInterval(() => {
+        const seconds = Math.max(1, Math.round((Date.now() - scanStartedAt) / 1000));
+        setStatus("Scanning.", `${mode} · ${seconds}s · move closer, then farther if needed.`);
+      }, 1800);
     }
 
     function getKcal100g(nutriments) {
@@ -696,18 +721,7 @@
           "image_front_url",
           "nutriments",
         ].join(",");
-        const url = `https://world.openfoodfacts.org/api/v3/product/${encodeURIComponent(barcode)}.json?fields=${fields}`;
-        const response = await fetch(url, {
-          headers: {
-            "X-User-Agent": "andkon.dev/scan - personal prototype",
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error(`Open Food Facts returned ${response.status}`);
-        }
-
-        const data = await response.json();
+        const data = await fetchProduct(barcode, fields);
         if (!data.product) {
           showEmptyProduct("Not found", barcode);
           setNotice("No Open Food Facts product matched this barcode.", "warn");
@@ -724,11 +738,47 @@
       }
     }
 
+    async function fetchProduct(barcode, fields) {
+      const candidates = barcode.length === 12 ? [barcode, `0${barcode}`] : [barcode];
+
+      for (const code of candidates) {
+        const url = `https://world.openfoodfacts.org/api/v3/product/${encodeURIComponent(code)}.json?fields=${fields}`;
+        const response = await fetch(url, {
+          headers: {
+            "X-User-Agent": "andkon.dev/scan - personal prototype",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Open Food Facts returned ${response.status}`);
+        }
+
+        const data = await response.json();
+        if (data.product || code === candidates[candidates.length - 1]) return data;
+      }
+
+      return {};
+    }
+
     function stopScanner() {
+      clearInterval(scanTimer);
+      scanTimer = null;
+
+      if (nativeFrame) {
+        cancelAnimationFrame(nativeFrame);
+        nativeFrame = null;
+      }
+
       if (controls) {
         controls.stop();
         controls = null;
       }
+
+      if (activeStream) {
+        activeStream.getTracks().forEach((track) => track.stop());
+        activeStream = null;
+      }
+
       if (window.ZXingBrowser?.BrowserCodeReader) {
         window.ZXingBrowser.BrowserCodeReader.releaseAllStreams();
       }
@@ -738,11 +788,6 @@
     }
 
     async function startScanner() {
-      if (!window.ZXingBrowser) {
-        setNotice("Barcode scanner library did not load.", "warn");
-        return;
-      }
-
       if (!navigator.mediaDevices?.getUserMedia) {
         setNotice("This browser does not expose camera access here.", "warn");
         return;
@@ -753,29 +798,87 @@
       startBtn.disabled = true;
       stopBtn.disabled = false;
       idle.hidden = true;
+      scanStartedAt = Date.now();
       setStatus("Scanning.", "Center the barcode.");
+      setNotice("Hold the barcode flat and fill most of the frame. If it does not catch, slowly change distance.", "");
 
       try {
-        reader = new window.ZXingBrowser.BrowserMultiFormatOneDReader(undefined, {
-          delayBetweenScanAttempts: 180,
-          delayBetweenScanSuccess: 800,
-        });
-
-        controls = await reader.decodeFromVideoDevice(null, video, (result, error) => {
-          if (!result || lookupBusy) return;
-
-          const barcode = normalizeBarcode(result.getText());
-          if (!barcode || barcode === lastBarcode) return;
-          lastBarcode = barcode;
-
-          stopScanner();
-          lookupBarcode(barcode);
-        });
+        if (await startNativeScanner()) return;
+        await startZxingScanner();
       } catch (error) {
         stopScanner();
         setStatus("Camera stopped.");
         setNotice(error.message || "Camera permission or barcode scanner failed.", "warn");
       }
+    }
+
+    async function startNativeScanner() {
+      if (!("BarcodeDetector" in window)) return false;
+
+      const wanted = ["ean_13", "ean_8", "upc_a", "upc_e"];
+      const supported = typeof window.BarcodeDetector.getSupportedFormats === "function"
+        ? await window.BarcodeDetector.getSupportedFormats()
+        : wanted;
+      const formats = wanted.filter((format) => supported.includes(format));
+      if (!formats.length) return false;
+
+      const detector = new window.BarcodeDetector({ formats });
+      activeStream = await navigator.mediaDevices.getUserMedia(cameraConstraints());
+      video.srcObject = activeStream;
+      await video.play();
+
+      startScanTimer("native");
+
+      const tick = async () => {
+        if (!activeStream || lookupBusy) return;
+
+        try {
+          framesChecked += 1;
+          const barcodes = await detector.detect(video);
+          const hit = barcodes.find((item) => normalizeBarcode(item.rawValue));
+
+          if (hit) {
+            const barcode = normalizeBarcode(hit.rawValue);
+            if (barcode && barcode !== lastBarcode) {
+              lastBarcode = barcode;
+              stopScanner();
+              lookupBarcode(barcode);
+              return;
+            }
+          }
+        } catch (error) {
+          console.warn(error);
+        }
+
+        nativeFrame = requestAnimationFrame(tick);
+      };
+
+      nativeFrame = requestAnimationFrame(tick);
+      return true;
+    }
+
+    async function startZxingScanner() {
+      if (!window.ZXingBrowser) {
+        throw new Error("Barcode scanner library did not load.");
+      }
+
+      reader = new window.ZXingBrowser.BrowserMultiFormatReader(undefined, {
+        delayBetweenScanAttempts: 120,
+        delayBetweenScanSuccess: 800,
+      });
+
+      startScanTimer("ZXing");
+
+      controls = await reader.decodeFromConstraints(cameraConstraints(), video, (result) => {
+        if (!result || lookupBusy) return;
+
+        const barcode = normalizeBarcode(result.getText());
+        if (!barcode || barcode === lastBarcode) return;
+        lastBarcode = barcode;
+
+        stopScanner();
+        lookupBarcode(barcode);
+      });
     }
 
     startBtn.addEventListener("click", startScanner);
