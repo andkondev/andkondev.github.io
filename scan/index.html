@@ -201,6 +201,57 @@
       font-weight: 680;
     }
 
+    .engine-picker {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1 1 auto;
+      min-width: 180px;
+    }
+
+    .engine-label {
+      color: var(--muted);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .engine-options {
+      display: inline-grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fffdf8;
+    }
+
+    .engine-option {
+      position: relative;
+      min-width: 88px;
+      min-height: 38px;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 720;
+    }
+
+    .engine-option + .engine-option {
+      border-left: 1px solid var(--line);
+    }
+
+    .engine-option input {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .engine-option:has(input:checked) {
+      color: #fff;
+      background: var(--accent);
+    }
+
     .actions {
       display: flex;
       gap: 10px;
@@ -501,6 +552,15 @@
         align-items: stretch;
       }
 
+      .engine-picker {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .engine-options {
+        flex: 1 1 auto;
+      }
+
       .actions {
         width: 100%;
       }
@@ -564,6 +624,19 @@
         </div>
         <div class="controls">
           <div class="status" id="status"><strong>Ready.</strong> Waiting for camera.</div>
+          <div class="engine-picker" aria-label="OCR engine">
+            <div class="engine-label">OCR</div>
+            <div class="engine-options">
+              <label class="engine-option">
+                <input type="radio" name="ocrEngine" value="tesseract" checked>
+                <span>Tesseract</span>
+              </label>
+              <label class="engine-option">
+                <input type="radio" name="ocrEngine" value="paddle">
+                <span>Paddle</span>
+              </label>
+            </div>
+          </div>
           <div class="actions">
             <button class="btn" id="startBtn" type="button">
               <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -651,6 +724,7 @@
     const startBtn = document.getElementById("startBtn");
     const labelBtn = document.getElementById("labelBtn");
     const labelInput = document.getElementById("labelInput");
+    const engineInputs = document.querySelectorAll('input[name="ocrEngine"]');
     const stopBtn = document.getElementById("stopBtn");
     const productImg = document.getElementById("productImg");
     const placeholderImg = document.getElementById("placeholderImg");
@@ -676,6 +750,14 @@
     let lookupBusy = false;
     let ocrBusy = false;
     let imageObjectUrl = "";
+    let currentImageInfo = null;
+    let paddleLoader = null;
+
+    const PADDLE_ASSETS_URL = "https://cdn.jsdelivr.net/npm/paddleocr-browser@1.0.3/dist/";
+    const PADDLE_MODULE_URL = "https://cdn.jsdelivr.net/npm/esearch-ocr@5.1.5/dist/esearch-ocr.js";
+    const PADDLE_ORT_URL = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.27.0/dist/ort.min.js";
+    const PADDLE_ORT_WASM_URL = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.27.0/dist/";
+    const PADDLE_OPENCV_URL = "https://docs.opencv.org/4.8.0/opencv.js";
 
     function setStatus(strong, text = "") {
       statusEl.innerHTML = `<strong>${escapeHtml(strong)}</strong>${text ? " " + escapeHtml(text) : ""}`;
@@ -698,11 +780,15 @@
         URL.revokeObjectURL(imageObjectUrl);
         imageObjectUrl = "";
       }
+      currentImageInfo = null;
     }
 
     function setBusy(isBusy) {
       startBtn.disabled = isBusy;
       labelBtn.disabled = isBusy;
+      engineInputs.forEach((input) => {
+        input.disabled = isBusy;
+      });
       stopBtn.disabled = isBusy || (!controls && !activeStream);
     }
 
@@ -722,6 +808,42 @@
         maximumFractionDigits: digits,
         minimumFractionDigits: digits,
       });
+    }
+
+    function formatBytes(bytes) {
+      if (!Number.isFinite(bytes) || bytes <= 0) return "unknown";
+      const units = ["B", "KB", "MB", "GB"];
+      let value = bytes;
+      let unitIndex = 0;
+      while (value >= 1024 && unitIndex < units.length - 1) {
+        value /= 1024;
+        unitIndex += 1;
+      }
+      const digits = value >= 10 || unitIndex === 0 ? 0 : 1;
+      return `${formatNumber(value, digits)} ${units[unitIndex]}`;
+    }
+
+    function formatImageDimensions(info) {
+      if (!info || !Number.isFinite(info.width) || !Number.isFinite(info.height)) return "unknown";
+      return `${info.width}x${info.height}`;
+    }
+
+    function formatLabelMeta(file, engineName, imageInfo) {
+      return [
+        file.name || "OCR from photo",
+        engineName,
+        formatImageDimensions(imageInfo),
+        formatBytes(file.size),
+      ].filter(Boolean).join(" - ");
+    }
+
+    function selectedOcrEngine() {
+      const checked = document.querySelector('input[name="ocrEngine"]:checked');
+      return checked?.value || "tesseract";
+    }
+
+    function ocrEngineName(engine) {
+      return engine === "paddle" ? "PaddleOCR" : "Tesseract";
     }
 
     function normalizeBarcode(raw) {
@@ -825,16 +947,44 @@
       productImg.src = imageObjectUrl;
       productImg.hidden = false;
       placeholderImg.hidden = true;
+      return imageObjectUrl;
     }
 
-    function showOcrDetails(parsed, rawText, open = false) {
+    function readImageInfo(file, src) {
+      return new Promise((resolve) => {
+        const image = new Image();
+        const finish = () => resolve({
+          width: image.naturalWidth || image.width || NaN,
+          height: image.naturalHeight || image.height || NaN,
+          size: file.size,
+          type: file.type || "unknown",
+        });
+
+        image.onload = finish;
+        image.onerror = () => resolve({
+          width: NaN,
+          height: NaN,
+          size: file.size,
+          type: file.type || "unknown",
+        });
+        image.src = src;
+      });
+    }
+
+    function showOcrDetails(parsed, rawText, open = false, context = {}) {
       const hasCalories = Number.isFinite(parsed.calories);
       const hasProtein = Number.isFinite(parsed.proteinG);
       const hasServing = Number.isFinite(parsed.servingG);
+      const confidence = Number.isFinite(context.confidence) ? `${formatNumber(context.confidence * 100, 0)}%` : "n/a";
       const fields = [
         ["Calories", hasCalories ? `${formatNumber(parsed.calories, 0)} kcal` : "missing"],
         ["Protein", hasProtein ? `${formatNumber(parsed.proteinG, 1)} g` : "missing"],
         ["Serving", hasServing ? `${formatNumber(parsed.servingG, 0)} g` : "missing"],
+        ["Engine", context.engineName || "OCR"],
+        ["Image", formatImageDimensions(context.imageInfo)],
+        ["File", `${formatBytes(context.fileSize)} ${context.fileType ? `(${context.fileType})` : ""}`.trim()],
+        ["OCR confidence", confidence],
+        ["OCR items", Number.isFinite(context.itemCount) ? formatNumber(context.itemCount, 0) : "n/a"],
       ];
 
       ocrFields.innerHTML = fields.map(([label, value]) => `
@@ -848,10 +998,11 @@
       ocrDetails.open = open;
     }
 
-    function showLabelResult(parsed, rawText, file) {
+    function showLabelResult(parsed, rawText, file, context = {}) {
       showLabelPreview(file);
+      currentImageInfo = context.imageInfo || currentImageInfo;
       productTitle.textContent = parsed.labelType === "nutrition_facts" ? "Nutrition label" : "Label scan";
-      productMeta.textContent = file.name || "OCR from photo";
+      productMeta.textContent = formatLabelMeta(file, context.engineName || "OCR", currentImageInfo);
 
       const hasProtein = Number.isFinite(parsed.proteinG) && parsed.proteinG >= 0;
       const hasCalories = Number.isFinite(parsed.calories) && parsed.calories > 0;
@@ -864,7 +1015,12 @@
       proteinRawEl.textContent = hasProtein ? `${formatNumber(parsed.proteinG, 1)} g/serving` : "--";
       energyRawEl.textContent = hasCalories ? `${formatNumber(parsed.calories, 0)} kcal/serving` : "--";
 
-      showOcrDetails(parsed, rawText, !hasProtein || !hasCalories || !hasServing);
+      showOcrDetails(parsed, rawText, !hasProtein || !hasCalories || !hasServing, {
+        ...context,
+        fileSize: file.size,
+        fileType: file.type || "",
+        imageInfo: currentImageInfo,
+      });
 
       if (hasProtein && hasCalories && hasServing) {
         if (proteinPercent > 105) {
@@ -1059,41 +1215,193 @@
       };
     }
 
+    function loadExternalScript(src) {
+      const existing = Array.from(document.scripts).find((script) => script.src === src);
+      if (existing?.dataset.loaded === "true") return Promise.resolve();
+      if (existing?.dataset.loading === "true") {
+        return new Promise((resolve, reject) => {
+          existing.addEventListener("load", resolve, { once: true });
+          existing.addEventListener("error", reject, { once: true });
+        });
+      }
+
+      return new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = src;
+        script.dataset.loading = "true";
+        script.onload = () => {
+          script.dataset.loading = "false";
+          script.dataset.loaded = "true";
+          resolve();
+        };
+        script.onerror = () => reject(new Error(`Could not load ${src}`));
+        document.head.appendChild(script);
+      });
+    }
+
+    async function loadOpenCv() {
+      if (window.cv?.Mat) return window.cv;
+
+      return new Promise((resolve, reject) => {
+        const timeout = window.setTimeout(() => {
+          reject(new Error("OpenCV took too long to load."));
+        }, 45000);
+
+        const done = (cv) => {
+          window.clearTimeout(timeout);
+          resolve(cv || window.cv);
+        };
+
+        window.Module = window.Module || {};
+        const previousInit = window.Module.onRuntimeInitialized;
+        window.Module.onRuntimeInitialized = () => {
+          if (typeof previousInit === "function") previousInit();
+          done(window.cv);
+        };
+
+        loadExternalScript(PADDLE_OPENCV_URL)
+          .then(() => {
+            if (window.cv?.Mat) {
+              done(window.cv);
+            } else if (window.cv?.then) {
+              window.cv.then(done).catch(reject);
+            }
+          })
+          .catch((error) => {
+            window.clearTimeout(timeout);
+            reject(error);
+          });
+      });
+    }
+
+    async function loadPaddleOcr(onProgress) {
+      if (paddleLoader) return paddleLoader;
+
+      paddleLoader = (async () => {
+        onProgress("Loading ONNX runtime");
+        await loadExternalScript(PADDLE_ORT_URL);
+
+        if (!window.ort) throw new Error("ONNX runtime did not load.");
+        window.ort.env.wasm.wasmPaths = PADDLE_ORT_WASM_URL;
+        window.ort.env.wasm.numThreads = 1;
+
+        onProgress("Loading OpenCV");
+        const cv = await loadOpenCv();
+
+        onProgress("Loading PaddleOCR module");
+        const Paddle = await import(PADDLE_MODULE_URL);
+
+        onProgress("Loading PaddleOCR model");
+        const dicResponse = await fetch(`${PADDLE_ASSETS_URL}ppocr_keys_v1.txt`);
+        if (!dicResponse.ok) throw new Error(`PaddleOCR dictionary returned ${dicResponse.status}`);
+        const dic = await dicResponse.text();
+
+        await Paddle.init({
+          detPath: `${PADDLE_ASSETS_URL}ppocr_det.onnx`,
+          recPath: `${PADDLE_ASSETS_URL}ppocr_rec.onnx`,
+          dic,
+          ort: window.ort,
+          node: false,
+          cv,
+          dev: false,
+          onProgress: (stage, total, current) => {
+            if (!stage) return;
+            const suffix = Number.isFinite(total) && Number.isFinite(current) && total > 1
+              ? ` ${current}/${total}`
+              : "";
+            onProgress(`PaddleOCR ${stage}${suffix}`);
+          },
+        });
+
+        return Paddle;
+      })();
+
+      return paddleLoader;
+    }
+
+    function averagePaddleConfidence(items) {
+      const scores = items
+        .map((item) => Number(item.mean))
+        .filter((score) => Number.isFinite(score));
+      if (!scores.length) return NaN;
+      return scores.reduce((sum, score) => sum + score, 0) / scores.length;
+    }
+
+    async function runTesseractOcr(file, onProgress) {
+      if (!window.Tesseract?.recognize) {
+        throw new Error("Tesseract OCR did not load. Reload the page and try again.");
+      }
+
+      const result = await window.Tesseract.recognize(file, "eng", {
+        logger: (message) => {
+          if (!message || !message.status) return;
+          const progress = Number.isFinite(message.progress)
+            ? ` ${Math.round(message.progress * 100)}%`
+            : "";
+          onProgress(`${message.status}${progress}`);
+        },
+      });
+
+      const words = Array.isArray(result?.data?.words) ? result.data.words : [];
+      const confidences = words
+        .map((word) => Number(word.confidence))
+        .filter((confidence) => Number.isFinite(confidence));
+      const confidence = confidences.length
+        ? confidences.reduce((sum, value) => sum + value, 0) / confidences.length / 100
+        : NaN;
+
+      return {
+        rawText: result?.data?.text || "",
+        confidence,
+        itemCount: words.length,
+      };
+    }
+
+    async function runPaddleOcr(src, onProgress) {
+      const Paddle = await loadPaddleOcr(onProgress);
+      onProgress("Running PaddleOCR");
+      const result = await Paddle.ocr(src);
+      const items = Array.isArray(result?.src) ? result.src : [];
+
+      return {
+        rawText: items.map((item) => item.text).filter(Boolean).join("\n"),
+        confidence: averagePaddleConfidence(items),
+        itemCount: items.length,
+      };
+    }
+
     async function readLabelImage(file) {
       if (!file || ocrBusy) return;
-      if (!window.Tesseract?.recognize) {
-        setNotice("Tesseract OCR did not load. Reload the page and try again.", "warn");
-        return;
-      }
 
       stopScanner();
       ocrBusy = true;
       setBusy(true);
-      showLabelPreview(file);
+      const previewUrl = showLabelPreview(file);
+      currentImageInfo = await readImageInfo(file, previewUrl);
+      const engine = selectedOcrEngine();
+      const engineName = ocrEngineName(engine);
       productTitle.textContent = "Reading label";
-      productMeta.textContent = file.name || "OCR from photo";
+      productMeta.textContent = formatLabelMeta(file, engineName, currentImageInfo);
       proteinPercentEl.textContent = "--";
       energyDensityEl.textContent = "--";
       proteinRawEl.textContent = "--";
       energyRawEl.textContent = "--";
       resetOcrDetails();
-      setNotice("OCR runs locally in this browser. This may take a moment on the first label.", "");
-      setStatus("Reading label.", "Loading OCR...");
+      setNotice(`${engineName} runs locally in this browser. The first run may take a moment.`, "");
+      setStatus("Reading label.", `Loading ${engineName}...`);
 
       try {
-        const result = await window.Tesseract.recognize(file, "eng", {
-          logger: (message) => {
-            if (!message || !message.status) return;
-            const progress = Number.isFinite(message.progress)
-              ? ` ${Math.round(message.progress * 100)}%`
-              : "";
-            setStatus("Reading label.", `${message.status}${progress}`);
-          },
-        });
-
-        const rawText = result?.data?.text || "";
+        const ocrResult = engine === "paddle"
+          ? await runPaddleOcr(previewUrl, (message) => setStatus("Reading label.", message))
+          : await runTesseractOcr(file, (message) => setStatus("Reading label.", message));
+        const rawText = ocrResult.rawText || "";
         const parsed = parseNutritionText(rawText);
-        showLabelResult(parsed, rawText, file);
+        showLabelResult(parsed, rawText, file, {
+          engineName,
+          imageInfo: currentImageInfo,
+          confidence: ocrResult.confidence,
+          itemCount: ocrResult.itemCount,
+        });
       } catch (error) {
         showEmptyProduct("OCR failed", file.name || "Label image");
         setNotice(error.message || "Could not read text from this image.", "warn");
