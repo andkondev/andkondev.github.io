@@ -650,6 +650,12 @@
               </svg>
               Label
             </button>
+            <button class="btn secondary" id="fileBtn" type="button">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M5 7h5l2 2h7v8H5z" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              File
+            </button>
             <button class="btn secondary" id="stopBtn" type="button" disabled>
               <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M8 8h8v8H8z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>
@@ -657,6 +663,7 @@
               Stop
             </button>
             <input class="file-input" id="labelInput" type="file" accept="image/*" capture="environment">
+            <input class="file-input" id="fileInput" type="file" accept="image/*">
           </div>
         </div>
       </section>
@@ -724,6 +731,8 @@
     const startBtn = document.getElementById("startBtn");
     const labelBtn = document.getElementById("labelBtn");
     const labelInput = document.getElementById("labelInput");
+    const fileBtn = document.getElementById("fileBtn");
+    const fileInput = document.getElementById("fileInput");
     const engineInputs = document.querySelectorAll('input[name="ocrEngine"]');
     const stopBtn = document.getElementById("stopBtn");
     const productImg = document.getElementById("productImg");
@@ -792,6 +801,7 @@
     function setBusy(isBusy) {
       startBtn.disabled = isBusy;
       labelBtn.disabled = isBusy;
+      fileBtn.disabled = isBusy;
       engineInputs.forEach((input) => {
         input.disabled = isBusy;
       });
@@ -1481,7 +1491,11 @@
       proteinRawEl.textContent = "--";
       energyRawEl.textContent = "--";
       resetOcrDetails();
-      setNotice(`${engineName} runs locally in this browser. The first run may take a moment.`, "");
+      if (engine === "paddle") {
+        setNotice("PaddleOCR loads OpenCV in the browser. If the timer freezes at 0s, the tab is blocked; try the File button on desktop or use Tesseract.", "warn");
+      } else {
+        setNotice(`${engineName} runs locally in this browser. The first run may take a moment.`, "");
+      }
       startOcrMonitor(engineName, `Loading ${engineName}`);
 
       try {
@@ -1505,6 +1519,7 @@
         setBusy(false);
         setStatus("Ready.", "Tap scan for another product or label.");
         labelInput.value = "";
+        fileInput.value = "";
       }
     }
 
@@ -1533,6 +1548,7 @@
       idle.hidden = false;
       startBtn.disabled = false;
       labelBtn.disabled = false;
+      fileBtn.disabled = false;
       stopBtn.disabled = true;
     }
 
@@ -1546,6 +1562,7 @@
       lastBarcode = "";
       startBtn.disabled = true;
       labelBtn.disabled = true;
+      fileBtn.disabled = true;
       stopBtn.disabled = false;
       idle.hidden = true;
       scanStartedAt = Date.now();
@@ -1633,8 +1650,13 @@
 
     startBtn.addEventListener("click", startScanner);
     labelBtn.addEventListener("click", () => labelInput.click());
+    fileBtn.addEventListener("click", () => fileInput.click());
     labelInput.addEventListener("change", () => {
       const file = labelInput.files && labelInput.files[0];
+      if (file) readLabelImage(file);
+    });
+    fileInput.addEventListener("change", () => {
+      const file = fileInput.files && fileInput.files[0];
       if (file) readLabelImage(file);
     });
     stopBtn.addEventListener("click", () => {
