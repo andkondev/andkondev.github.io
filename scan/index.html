@@ -1243,14 +1243,22 @@
       if (window.cv?.Mat) return window.cv;
 
       return new Promise((resolve, reject) => {
-        const timeout = window.setTimeout(() => {
-          reject(new Error("OpenCV took too long to load."));
-        }, 45000);
-
+        let settled = false;
         const done = (cv) => {
+          if (settled) return;
+          settled = true;
           window.clearTimeout(timeout);
           resolve(cv || window.cv);
         };
+        const fail = (error) => {
+          if (settled) return;
+          settled = true;
+          window.clearTimeout(timeout);
+          reject(error);
+        };
+        const timeout = window.setTimeout(() => {
+          fail(new Error("OpenCV took too long to load."));
+        }, 45000);
 
         window.Module = window.Module || {};
         const previousInit = window.Module.onRuntimeInitialized;
@@ -1263,14 +1271,15 @@
           .then(() => {
             if (window.cv?.Mat) {
               done(window.cv);
-            } else if (window.cv?.then) {
-              window.cv.then(done).catch(reject);
+            } else if (typeof window.cv?.then === "function") {
+              try {
+                window.cv.then(done, fail);
+              } catch (error) {
+                fail(error);
+              }
             }
           })
-          .catch((error) => {
-            window.clearTimeout(timeout);
-            reject(error);
-          });
+          .catch(fail);
       });
     }
 
