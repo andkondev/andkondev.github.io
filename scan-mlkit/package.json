@@ -1,0 +1,29 @@
+{
+  "name": "scan-mlkit",
+  "version": "1.0.0",
+  "description": "Tiny ML Kit OCR test harness for nutrition labels.",
+  "scripts": {
+    "build": "vite build",
+    "sync": "npm run build && cap sync android",
+    "android": "npm run sync && cap open android"
+  },
+  "keywords": [
+    "mlkit",
+    "ocr",
+    "nutrition"
+  ],
+  "author": "",
+  "license": "UNLICENSED",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@capacitor/android": "^8.4.1",
+    "@capacitor/camera": "^8.2.0",
+    "@capacitor/cli": "^8.4.1",
+    "@capacitor/core": "^8.4.1",
+    "@pantrist/capacitor-plugin-ml-kit-text-recognition": "^8.0.0"
+  },
+  "devDependencies": {
+    "vite": "^8.1.0"
+  }
+}

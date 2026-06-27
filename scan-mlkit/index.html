@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Protein Scan ML Kit</title>
+  </head>
+  <body>
+    <main class="app">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Android ML Kit OCR test</p>
+          <h1>Protein Scan</h1>
+        </div>
+        <div class="status" id="status">Ready</div>
+      </header>
+
+      <section class="actions" aria-label="Image actions">
+        <button class="primary" id="cameraBtn" type="button">Take Photo</button>
+        <button id="galleryBtn" type="button">Pick Image</button>
+      </section>
+
+      <section class="preview">
+        <img id="preview" alt="" hidden />
+        <div class="placeholder" id="placeholder">No image yet</div>
+      </section>
+
+      <section class="metrics" aria-label="Parsed nutrition">
+        <article>
+          <div class="label">Protein percentage</div>
+          <div class="value" id="proteinPercent">--</div>
+          <div class="unit">% calories from protein</div>
+        </article>
+        <article>
+          <div class="label">Energy density</div>
+          <div class="value" id="energyDensity">--</div>
+          <div class="unit">kcal/g</div>
+        </article>
+        <article>
+          <div class="label">Calories</div>
+          <div class="value small" id="calories">--</div>
+        </article>
+        <article>
+          <div class="label">Protein</div>
+          <div class="value small" id="protein">--</div>
+        </article>
+        <article>
+          <div class="label">Serving</div>
+          <div class="value small" id="serving">--</div>
+        </article>
+        <article>
+          <div class="label">Image</div>
+          <div class="value small" id="imageInfo">--</div>
+        </article>
+      </section>
+
+      <section class="output">
+        <details open>
+          <summary>Recognized lines</summary>
+          <pre id="linesText"></pre>
+        </details>
+        <details open>
+          <summary>Raw OCR text</summary>
+          <pre id="rawText"></pre>
+        </details>
+        <details>
+          <summary>Blocks JSON</summary>
+          <pre id="jsonText"></pre>
+        </details>
+      </section>
+    </main>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

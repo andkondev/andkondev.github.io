@@ -1,0 +1,10 @@
+{
+  "appId": "dev.andkon.proteinscanmlkit",
+  "appName": "Protein Scan ML Kit",
+  "webDir": "dist",
+  "plugins": {
+    "Camera": {
+      "permissions": ["camera", "photos"]
+    }
+  }
+}
