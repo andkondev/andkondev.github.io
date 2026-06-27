@@ -7,6 +7,8 @@ const els = {
   barcodeBtn: document.getElementById("barcodeBtn"),
   cameraBtn: document.getElementById("cameraBtn"),
   galleryBtn: document.getElementById("galleryBtn"),
+  meatSearchInput: document.getElementById("meatSearchInput"),
+  meatResults: document.getElementById("meatResults"),
   status: document.getElementById("status"),
   preview: document.getElementById("preview"),
   placeholder: document.getElementById("placeholder"),
@@ -27,6 +29,23 @@ const BARCODE_FORMATS = [
   BarcodeFormat.UpcA,
   BarcodeFormat.UpcE,
 ];
+
+const QUERY_ANIMALS = [
+  "beef", "veal", "lamb", "pork", "chicken", "turkey", "duck", "goose",
+  "salmon", "tuna", "shrimp", "cod", "tilapia", "trout", "sardine", "halibut",
+  "snapper", "mahi mahi", "catfish", "haddock", "pollock", "crab", "lobster",
+  "scallop", "clam", "oyster", "mussel", "flounder", "swordfish", "fish",
+];
+const QUERY_FORMS = [
+  "ground", "breast", "thigh", "wing", "drumstick", "sirloin", "ribeye",
+  "round", "chuck", "loin", "tenderloin", "fillet", "steak", "roast", "chop",
+  "ribs", "sausage", "ham", "bacon",
+];
+const QUERY_STATES = ["raw", "cooked", "grilled", "broiled", "roasted", "fried", "canned", "smoked"];
+const QUERY_STOP_WORDS = new Set(["and", "or", "the", "with", "without", "only", "meat", "seafood", "fresh", "frozen"]);
+
+let meatFoods = [];
+let meatLoadPromise = null;
 
 function setStatus(text) {
   els.status.textContent = text;
@@ -56,6 +75,16 @@ function formatBytes(bytes) {
     index += 1;
   }
   return `${formatNumber(value, value >= 10 || index === 0 ? 0 : 1)} ${units[index]}`;
+}
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;",
+  }[char]));
 }
 
 function cleanOcrLine(line) {
@@ -105,6 +134,116 @@ function getKcal100g(nutriments) {
 function getProtein100g(nutriments) {
   const protein = Number(nutriments?.proteins_100g);
   return Number.isFinite(protein) && protein >= 0 ? protein : NaN;
+}
+
+function normalizeSearchText(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/%/g, " percent ")
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function searchTokens(value) {
+  return normalizeSearchText(value)
+    .split(" ")
+    .filter((token) => token.length > 1 && !QUERY_STOP_WORDS.has(token));
+}
+
+function findKnownTerm(text, terms) {
+  return terms.find((term) => new RegExp(`\\b${term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`).test(text)) || "";
+}
+
+function parseLeanFat(query) {
+  const compact = query.replace(/\s+/g, " ").trim();
+  const slash = compact.match(/\b(\d{2,3})\s*(?:\/|\s+)\s*(\d{1,3})\b/);
+  if (slash) {
+    const lean = Number(slash[1]);
+    const fat = Number(slash[2]);
+    if (lean >= 45 && lean <= 99 && fat >= 1 && fat <= 55 && Math.abs(lean + fat - 100) <= 2) {
+      return { lean, fat };
+    }
+  }
+
+  const leanOnly = compact.match(/\b(\d{2,3})\s*(?:percent|%)?\s*lean\b/);
+  if (leanOnly) {
+    const lean = Number(leanOnly[1]);
+    if (lean >= 45 && lean <= 99) return { lean, fat: 100 - lean };
+  }
+
+  return { lean: null, fat: null };
+}
+
+function parseMeatQuery(rawQuery) {
+  const normalized = normalizeSearchText(rawQuery);
+  const tokens = searchTokens(rawQuery);
+  const ratio = parseLeanFat(normalized);
+  const animal = normalized.includes("hamburger") ? "beef" : findKnownTerm(normalized, QUERY_ANIMALS);
+  const form = normalized.includes("hamburger") ? "ground" : findKnownTerm(normalized, QUERY_FORMS);
+  const state = findKnownTerm(normalized, QUERY_STATES);
+  return {
+    normalized,
+    tokens,
+    animal,
+    form,
+    state,
+    lean: ratio.lean,
+    fat: ratio.fat,
+    wild: /\bwild\b|\bwild caught\b/.test(normalized),
+    farm: /\bfarm\b|\bfarmed\b|\bfarm raised\b/.test(normalized),
+  };
+}
+
+function scoreMeatFood(food, query) {
+  if (!query.normalized) return 0;
+
+  const name = normalizeSearchText(food.name);
+  const aliases = food.aliases || [];
+  const tokenSet = new Set(food.tokens || []);
+  let score = 0;
+
+  if (name === query.normalized) score += 180;
+  if (name.includes(query.normalized)) score += 70;
+  if (aliases.some((alias) => normalizeSearchText(alias) === query.normalized)) score += 150;
+  if (aliases.some((alias) => normalizeSearchText(alias).includes(query.normalized))) score += 70;
+
+  if (query.lean !== null) {
+    if (food.leanPercent === query.lean && food.fatPercent === query.fat) score += 140;
+    else if (food.leanPercent === query.lean) score += 80;
+    else score -= query.tokens.length <= 2 ? 90 : 25;
+  }
+
+  if (query.animal) {
+    if (food.animal === query.animal) score += 60;
+    else if (query.animal === "fish" && food.category === "Finfish and Shellfish Products") score += 30;
+    else score -= 35;
+  }
+
+  if (query.form) {
+    if (food.form === query.form || name.includes(query.form)) score += 38;
+    else score -= 12;
+  }
+
+  if (query.state) {
+    if (food.state === query.state || name.includes(query.state)) score += 30;
+    else score -= 20;
+  } else {
+    if (food.state === "raw") score += 16;
+    if (food.state === "cooked") score -= 14;
+    if (["canned", "smoked"].includes(food.state)) score -= 10;
+  }
+
+  if (query.wild) score += food.wildCaught ? 45 : -25;
+  if (query.farm) score += food.farmRaised ? 35 : -18;
+  if (food.dataType === "Foundation") score += 12;
+
+  for (const token of query.tokens) {
+    if (tokenSet.has(token)) score += 12;
+    else if (name.includes(token)) score += 7;
+  }
+
+  return score;
 }
 
 function findCalories(lines) {
@@ -271,6 +410,107 @@ function showProduct(product, barcode) {
   els.jsonText.textContent = JSON.stringify(product, null, 2);
 }
 
+async function loadMeatFoods() {
+  if (meatFoods.length) return meatFoods;
+  if (!meatLoadPromise) {
+    meatLoadPromise = fetch("/data/meat-seafood-usda.json")
+      .then((response) => {
+        if (!response.ok) throw new Error(`USDA data returned ${response.status}`);
+        return response.json();
+      })
+      .then((data) => {
+        meatFoods = data.foods || [];
+        return meatFoods;
+      });
+  }
+  return meatLoadPromise;
+}
+
+function meatMeta(food) {
+  return [
+    food.animal,
+    food.form,
+    food.state,
+    food.leanPercent ? `${food.leanPercent}/${food.fatPercent}` : "",
+    food.dataType,
+  ].filter(Boolean).join(" - ");
+}
+
+function showMeatFood(food) {
+  const hasProtein = Number.isFinite(food.protein100g);
+  const hasEnergy = Number.isFinite(food.kcal100g) && food.kcal100g > 0;
+
+  els.preview.hidden = true;
+  els.preview.removeAttribute("src");
+  els.placeholder.hidden = false;
+  els.placeholder.textContent = food.name;
+  els.proteinPercent.textContent = Number.isFinite(food.proteinPct) ? `${formatNumber(food.proteinPct, 1)}%` : "--";
+  els.energyDensity.textContent = Number.isFinite(food.energyDensity) ? formatNumber(food.energyDensity, 2) : "--";
+  els.calories.textContent = hasEnergy ? `${formatNumber(food.kcal100g, 0)} kcal/100g` : "--";
+  els.protein.textContent = hasProtein ? `${formatNumber(food.protein100g, 1)} g/100g` : "--";
+  els.serving.textContent = "100 g";
+  els.imageInfo.textContent = `USDA FDC ${food.id} - ${food.category}`;
+  els.linesText.textContent = `${food.name}\n${meatMeta(food)}`;
+  els.rawText.textContent = JSON.stringify({
+    fdcId: food.id,
+    source: food.source,
+    dataType: food.dataType,
+    category: food.category,
+    kcal100g: food.kcal100g,
+    protein100g: food.protein100g,
+    fat100g: food.fat100g,
+  }, null, 2);
+  els.jsonText.textContent = JSON.stringify(food, null, 2);
+  setStatus("USDA lookup done");
+}
+
+function renderMeatResults(matches) {
+  els.meatResults.innerHTML = matches.map(({ food }) => `
+    <button class="search-result" type="button" data-id="${food.id}">
+      <span>
+        <span class="search-result-name">${escapeHtml(food.name)}</span>
+        <span class="search-result-meta">${escapeHtml(meatMeta(food))}</span>
+      </span>
+      <span class="search-result-score">${formatNumber(food.proteinPct, 0)}% protein - ${formatNumber(food.energyDensity, 2)} kcal/g</span>
+    </button>
+  `).join("");
+
+  for (const button of els.meatResults.querySelectorAll(".search-result")) {
+    button.addEventListener("click", () => {
+      const food = meatFoods.find((item) => String(item.id) === button.dataset.id);
+      if (food) showMeatFood(food);
+    });
+  }
+}
+
+async function updateMeatSearch() {
+  const queryText = els.meatSearchInput.value.trim();
+  if (!queryText) {
+    els.meatResults.innerHTML = "";
+    return;
+  }
+
+  els.meatResults.innerHTML = `<div class="search-message">Loading USDA meat/seafood data...</div>`;
+  try {
+    const foods = await loadMeatFoods();
+    const query = parseMeatQuery(queryText);
+    const matches = foods
+      .map((food) => ({ food, score: scoreMeatFood(food, query) }))
+      .filter((match) => match.score > 0)
+      .sort((a, b) => b.score - a.score || a.food.name.localeCompare(b.food.name))
+      .slice(0, 8);
+
+    if (!matches.length) {
+      els.meatResults.innerHTML = `<div class="search-message warn">No meat/seafood match found.</div>`;
+      return;
+    }
+
+    renderMeatResults(matches);
+  } catch (error) {
+    els.meatResults.innerHTML = `<div class="search-message warn">${escapeHtml(error.message || "Could not load USDA data.")}</div>`;
+  }
+}
+
 async function fetchProduct(barcode, fields) {
   const candidates = barcode.length === 12 ? [barcode, `0${barcode}`] : [barcode];
 
@@ -415,3 +655,7 @@ async function scanSource(source) {
 els.barcodeBtn.addEventListener("click", scanBarcode);
 els.cameraBtn.addEventListener("click", () => scanSource(CameraSource.Camera));
 els.galleryBtn.addEventListener("click", () => scanSource(CameraSource.Photos));
+els.meatSearchInput.addEventListener("input", updateMeatSearch);
+els.meatSearchInput.addEventListener("focus", () => {
+  loadMeatFoods().catch(() => {});
+});
