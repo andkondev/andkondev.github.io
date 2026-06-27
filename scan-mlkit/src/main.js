@@ -413,7 +413,7 @@ function showProduct(product, barcode) {
 async function loadMeatFoods() {
   if (meatFoods.length) return meatFoods;
   if (!meatLoadPromise) {
-    meatLoadPromise = fetch("/data/meat-seafood-usda.json")
+    meatLoadPromise = fetch("/data/whole-foods-usda.json")
       .then((response) => {
         if (!response.ok) throw new Error(`USDA data returned ${response.status}`);
         return response.json();
@@ -428,6 +428,7 @@ async function loadMeatFoods() {
 
 function meatMeta(food) {
   return [
+    food.category,
     food.animal,
     food.form,
     food.state,
@@ -490,18 +491,18 @@ async function updateMeatSearch() {
     return;
   }
 
-  els.meatResults.innerHTML = `<div class="search-message">Loading USDA meat/seafood data...</div>`;
+  els.meatResults.innerHTML = `<div class="search-message">Loading USDA whole-food data...</div>`;
   try {
     const foods = await loadMeatFoods();
     const query = parseMeatQuery(queryText);
     const matches = foods
       .map((food) => ({ food, score: scoreMeatFood(food, query) }))
       .filter((match) => match.score > 0)
-      .sort((a, b) => b.score - a.score || a.food.name.localeCompare(b.food.name))
+      .sort((a, b) => b.score - a.score || a.food.name.length - b.food.name.length || a.food.name.localeCompare(b.food.name))
       .slice(0, 8);
 
     if (!matches.length) {
-      els.meatResults.innerHTML = `<div class="search-message warn">No meat/seafood match found.</div>`;
+      els.meatResults.innerHTML = `<div class="search-message warn">No whole-food match found.</div>`;
       return;
     }
 

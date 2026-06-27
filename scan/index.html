@@ -597,9 +597,9 @@
             </button>
           </div>
         </div>
-        <div class="manual-search" aria-label="Meat and seafood search">
-          <label class="manual-label" for="meatSearchInput">Meat / seafood</label>
-          <input class="search-input" id="meatSearchInput" type="search" autocomplete="off" spellcheck="false" placeholder="80 20, wild caught salmon, chicken breast">
+        <div class="manual-search" aria-label="Whole foods search">
+          <label class="manual-label" for="meatSearchInput">Whole foods</label>
+          <input class="search-input" id="meatSearchInput" type="search" autocomplete="off" spellcheck="false" placeholder="80 20, salmon, banana, Greek yogurt">
           <div class="search-results" id="meatResults"></div>
         </div>
       </section>
@@ -843,7 +843,7 @@
     async function loadMeatFoods() {
       if (meatFoods.length) return meatFoods;
       if (!meatLoadPromise) {
-        meatLoadPromise = fetch("data/meat-seafood-usda.json")
+        meatLoadPromise = fetch("data/whole-foods-usda.json")
           .then((response) => {
             if (!response.ok) throw new Error(`USDA data returned ${response.status}`);
             return response.json();
@@ -858,6 +858,7 @@
 
     function meatMeta(food) {
       return [
+        food.category,
         food.animal,
         food.form,
         food.state,
@@ -879,7 +880,7 @@
       energyDensityEl.textContent = Number.isFinite(food.energyDensity) ? formatNumber(food.energyDensity, 2) : "--";
       proteinRawEl.textContent = hasProtein ? `${formatNumber(food.protein100g, 1)} g/100g` : "--";
       energyRawEl.textContent = hasEnergy ? `${formatNumber(food.kcal100g, 0)} kcal/100g` : "--";
-      setNotice("Calculated from local USDA FoodData Central meat/seafood data.", "good");
+      setNotice("Calculated from local USDA FoodData Central whole-food data.", "good");
     }
 
     function renderMeatResults(matches) {
@@ -908,18 +909,18 @@
         return;
       }
 
-      meatResults.innerHTML = `<div class="notice">Loading USDA meat/seafood data...</div>`;
+      meatResults.innerHTML = `<div class="notice">Loading USDA whole-food data...</div>`;
       try {
         const foods = await loadMeatFoods();
         const query = parseMeatQuery(queryText);
         const matches = foods
           .map((food) => ({ food, score: scoreMeatFood(food, query) }))
           .filter((match) => match.score > 0)
-          .sort((a, b) => b.score - a.score || a.food.name.localeCompare(b.food.name))
+          .sort((a, b) => b.score - a.score || a.food.name.length - b.food.name.length || a.food.name.localeCompare(b.food.name))
           .slice(0, 8);
 
         if (!matches.length) {
-          meatResults.innerHTML = `<div class="notice warn">No meat/seafood match found.</div>`;
+          meatResults.innerHTML = `<div class="notice warn">No whole-food match found.</div>`;
           return;
         }
 
