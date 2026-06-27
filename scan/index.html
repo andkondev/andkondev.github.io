@@ -752,6 +752,12 @@
     let imageObjectUrl = "";
     let currentImageInfo = null;
     let paddleLoader = null;
+    let ocrTimer = null;
+    let ocrStartedAt = 0;
+    let ocrLastProgressAt = 0;
+    let ocrPhase = "";
+    let ocrEngineInProgress = "";
+    let ocrStallNoticeShown = false;
 
     const PADDLE_ASSETS_URL = "https://cdn.jsdelivr.net/npm/paddleocr-browser@1.0.3/dist/";
     const PADDLE_MODULE_URL = "https://cdn.jsdelivr.net/npm/esearch-ocr@5.1.5/dist/esearch-ocr.js";
@@ -790,6 +796,59 @@
         input.disabled = isBusy;
       });
       stopBtn.disabled = isBusy || (!controls && !activeStream);
+    }
+
+    function formatDuration(ms) {
+      const seconds = Math.max(0, Math.round(ms / 1000));
+      if (seconds < 60) return `${seconds}s`;
+      const minutes = Math.floor(seconds / 60);
+      const remainder = seconds % 60;
+      return `${minutes}m ${remainder}s`;
+    }
+
+    function renderOcrProgress() {
+      if (!ocrBusy || !ocrStartedAt) return;
+
+      const now = Date.now();
+      const elapsed = formatDuration(now - ocrStartedAt);
+      const idleSeconds = Math.round((now - ocrLastProgressAt) / 1000);
+      const idleText = idleSeconds >= 10 ? ` - no new progress ${idleSeconds}s` : "";
+      setStatus("Reading label.", `${ocrEngineInProgress} - ${ocrPhase || "working"} - ${elapsed} elapsed${idleText}`);
+
+      if (idleSeconds >= 45 && !ocrStallNoticeShown) {
+        ocrStallNoticeShown = true;
+        setNotice(`${ocrEngineInProgress} has not reported progress for ${idleSeconds}s. It may still be working, but if this sits much longer, reload and try a tighter/smaller label photo.`, "warn");
+      }
+    }
+
+    function startOcrMonitor(engineName, initialPhase) {
+      stopOcrMonitor();
+      ocrEngineInProgress = engineName;
+      ocrPhase = initialPhase;
+      ocrStartedAt = Date.now();
+      ocrLastProgressAt = ocrStartedAt;
+      ocrStallNoticeShown = false;
+      renderOcrProgress();
+      ocrTimer = setInterval(renderOcrProgress, 1000);
+    }
+
+    function updateOcrProgress(message) {
+      ocrPhase = message || "working";
+      ocrLastProgressAt = Date.now();
+      ocrStallNoticeShown = false;
+      renderOcrProgress();
+    }
+
+    function stopOcrMonitor() {
+      if (ocrTimer) {
+        clearInterval(ocrTimer);
+        ocrTimer = null;
+      }
+      ocrStartedAt = 0;
+      ocrLastProgressAt = 0;
+      ocrPhase = "";
+      ocrEngineInProgress = "";
+      ocrStallNoticeShown = false;
     }
 
     function escapeHtml(value) {
@@ -1397,12 +1456,12 @@
       energyRawEl.textContent = "--";
       resetOcrDetails();
       setNotice(`${engineName} runs locally in this browser. The first run may take a moment.`, "");
-      setStatus("Reading label.", `Loading ${engineName}...`);
+      startOcrMonitor(engineName, `Loading ${engineName}`);
 
       try {
         const ocrResult = engine === "paddle"
-          ? await runPaddleOcr(previewUrl, (message) => setStatus("Reading label.", message))
-          : await runTesseractOcr(file, (message) => setStatus("Reading label.", message));
+          ? await runPaddleOcr(previewUrl, updateOcrProgress)
+          : await runTesseractOcr(file, updateOcrProgress);
         const rawText = ocrResult.rawText || "";
         const parsed = parseNutritionText(rawText);
         showLabelResult(parsed, rawText, file, {
@@ -1415,6 +1474,7 @@
         showEmptyProduct("OCR failed", file.name || "Label image");
         setNotice(error.message || "Could not read text from this image.", "warn");
       } finally {
+        stopOcrMonitor();
         ocrBusy = false;
         setBusy(false);
         setStatus("Ready.", "Tap scan for another product or label.");
