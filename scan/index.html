@@ -1298,26 +1298,49 @@
       });
     }
 
-    async function loadOpenCv() {
+    async function loadOpenCv(onProgress = () => {}) {
       if (window.cv?.Mat) return window.cv;
 
       return new Promise((resolve, reject) => {
         let settled = false;
+        let thenAttached = false;
+        let scriptLoaded = false;
+        let progressInterval = null;
         const done = (cv) => {
           if (settled) return;
           settled = true;
+          window.clearInterval(interval);
+          if (progressInterval) window.clearInterval(progressInterval);
           window.clearTimeout(timeout);
           resolve(cv || window.cv);
         };
         const fail = (error) => {
           if (settled) return;
           settled = true;
+          window.clearInterval(interval);
+          if (progressInterval) window.clearInterval(progressInterval);
           window.clearTimeout(timeout);
           reject(error);
         };
+        const checkReady = () => {
+          if (window.cv?.Mat) {
+            done(window.cv);
+            return;
+          }
+
+          if (!thenAttached && typeof window.cv?.then === "function") {
+            thenAttached = true;
+            try {
+              window.cv.then(done, fail);
+            } catch (error) {
+              fail(error);
+            }
+          }
+        };
+        const interval = window.setInterval(checkReady, 250);
         const timeout = window.setTimeout(() => {
-          fail(new Error("OpenCV took too long to load."));
-        }, 45000);
+          fail(new Error("OpenCV did not finish initializing. PaddleOCR may be too heavy for this browser; try Tesseract or reload and try a smaller/cropped label photo."));
+        }, 60000);
 
         window.Module = window.Module || {};
         const previousInit = window.Module.onRuntimeInitialized;
@@ -1328,17 +1351,20 @@
 
         loadExternalScript(PADDLE_OPENCV_URL)
           .then(() => {
-            if (window.cv?.Mat) {
-              done(window.cv);
-            } else if (typeof window.cv?.then === "function") {
-              try {
-                window.cv.then(done, fail);
-              } catch (error) {
-                fail(error);
-              }
-            }
+            scriptLoaded = true;
+            onProgress("Waiting for OpenCV runtime");
+            checkReady();
           })
           .catch(fail);
+
+        progressInterval = window.setInterval(() => {
+          if (settled) {
+            window.clearInterval(progressInterval);
+            return;
+          }
+          onProgress(scriptLoaded ? "Waiting for OpenCV runtime" : "Downloading OpenCV");
+          checkReady();
+        }, 5000);
       });
     }
 
@@ -1354,7 +1380,7 @@
         window.ort.env.wasm.numThreads = 1;
 
         onProgress("Loading OpenCV");
-        const cv = await loadOpenCv();
+        const cv = await loadOpenCv(onProgress);
 
         onProgress("Loading PaddleOCR module");
         const Paddle = await import(PADDLE_MODULE_URL);
