@@ -205,6 +205,8 @@
       display: flex;
       gap: 10px;
       flex: 0 0 auto;
+      flex-wrap: wrap;
+      justify-content: flex-end;
     }
 
     .btn {
@@ -397,6 +399,68 @@
       background: #f0fff5;
     }
 
+    .file-input {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .ocr-details {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fffdf8;
+      overflow: hidden;
+    }
+
+    .ocr-details summary {
+      cursor: pointer;
+      padding: 13px 14px;
+      color: var(--ink);
+      font-weight: 720;
+    }
+
+    .ocr-fields {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      padding: 0 14px 14px;
+    }
+
+    .ocr-field {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      min-width: 0;
+      background: #faf7f0;
+    }
+
+    .ocr-field-label {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.2;
+      margin-bottom: 5px;
+    }
+
+    .ocr-field-value {
+      font-size: 15px;
+      font-weight: 720;
+      overflow-wrap: anywhere;
+    }
+
+    .ocr-text {
+      margin: 0;
+      max-height: 260px;
+      overflow: auto;
+      padding: 14px;
+      border-top: 1px solid var(--line);
+      background: #f5f1e8;
+      color: var(--ink);
+      white-space: pre-wrap;
+      font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
     [hidden] {
       display: none !important;
     }
@@ -445,6 +509,10 @@
         flex: 1;
       }
 
+      .ocr-fields {
+        grid-template-columns: 1fr;
+      }
+
       .result-head {
         grid-template-columns: 72px minmax(0, 1fr);
       }
@@ -477,7 +545,7 @@
         </div>
         <h1>Protein Scan</h1>
       </div>
-      <div class="source">Open Food Facts lookup</div>
+      <div class="source">Barcode + label OCR</div>
     </header>
 
     <main>
@@ -503,12 +571,19 @@
               </svg>
               Scan
             </button>
+            <button class="btn secondary" id="labelBtn" type="button">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M6 5h12v14H6zM9 9h6M9 12h6M9 15h3" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Label
+            </button>
             <button class="btn secondary" id="stopBtn" type="button" disabled>
               <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M8 8h8v8H8z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>
               </svg>
               Stop
             </button>
+            <input class="file-input" id="labelInput" type="file" accept="image/*" capture="environment">
           </div>
         </div>
       </section>
@@ -556,17 +631,26 @@
           </div>
 
           <div class="notice" id="notice">Results use per-100g nutrition fields when available.</div>
+
+          <details class="ocr-details" id="ocrDetails" hidden>
+            <summary>OCR text and extracted fields</summary>
+            <div class="ocr-fields" id="ocrFields"></div>
+            <pre class="ocr-text" id="ocrText"></pre>
+          </details>
         </div>
       </section>
     </main>
   </div>
 
   <script src="https://unpkg.com/@zxing/browser@0.2.0/umd/zxing-browser.min.js"></script>
+  <script src="https://unpkg.com/tesseract.js@7.0.0/dist/tesseract.min.js"></script>
   <script>
     const video = document.getElementById("video");
     const idle = document.getElementById("idle");
     const statusEl = document.getElementById("status");
     const startBtn = document.getElementById("startBtn");
+    const labelBtn = document.getElementById("labelBtn");
+    const labelInput = document.getElementById("labelInput");
     const stopBtn = document.getElementById("stopBtn");
     const productImg = document.getElementById("productImg");
     const placeholderImg = document.getElementById("placeholderImg");
@@ -577,6 +661,9 @@
     const proteinRawEl = document.getElementById("proteinRaw");
     const energyRawEl = document.getElementById("energyRaw");
     const noticeEl = document.getElementById("notice");
+    const ocrDetails = document.getElementById("ocrDetails");
+    const ocrFields = document.getElementById("ocrFields");
+    const ocrText = document.getElementById("ocrText");
 
     let reader = null;
     let controls = null;
@@ -587,6 +674,8 @@
     let scanStartedAt = 0;
     let lastBarcode = "";
     let lookupBusy = false;
+    let ocrBusy = false;
+    let imageObjectUrl = "";
 
     function setStatus(strong, text = "") {
       statusEl.innerHTML = `<strong>${escapeHtml(strong)}</strong>${text ? " " + escapeHtml(text) : ""}`;
@@ -595,6 +684,26 @@
     function setNotice(text, type = "") {
       noticeEl.textContent = text;
       noticeEl.className = `notice${type ? " " + type : ""}`;
+    }
+
+    function resetOcrDetails() {
+      ocrDetails.hidden = true;
+      ocrDetails.open = false;
+      ocrFields.innerHTML = "";
+      ocrText.textContent = "";
+    }
+
+    function clearImageObjectUrl() {
+      if (imageObjectUrl) {
+        URL.revokeObjectURL(imageObjectUrl);
+        imageObjectUrl = "";
+      }
+    }
+
+    function setBusy(isBusy) {
+      startBtn.disabled = isBusy;
+      labelBtn.disabled = isBusy;
+      stopBtn.disabled = isBusy || (!controls && !activeStream);
     }
 
     function escapeHtml(value) {
@@ -655,6 +764,8 @@
     }
 
     function showEmptyProduct(title, meta) {
+      clearImageObjectUrl();
+      resetOcrDetails();
       productTitle.textContent = title;
       productMeta.textContent = meta;
       productImg.hidden = true;
@@ -667,6 +778,8 @@
     }
 
     function showProduct(product, barcode) {
+      clearImageObjectUrl();
+      resetOcrDetails();
       const nutriments = product.nutriments || {};
       const protein100g = getProtein100g(nutriments);
       const kcal100g = getKcal100g(nutriments);
@@ -703,6 +816,70 @@
         setNotice("Product found with zero calories per 100g; protein percentage cannot be calculated.", "warn");
       } else {
         setNotice("Calculated from Open Food Facts per-100g nutrition fields.", "good");
+      }
+    }
+
+    function showLabelPreview(file) {
+      clearImageObjectUrl();
+      imageObjectUrl = URL.createObjectURL(file);
+      productImg.src = imageObjectUrl;
+      productImg.hidden = false;
+      placeholderImg.hidden = true;
+    }
+
+    function showOcrDetails(parsed, rawText, open = false) {
+      const hasCalories = Number.isFinite(parsed.calories);
+      const hasProtein = Number.isFinite(parsed.proteinG);
+      const hasServing = Number.isFinite(parsed.servingG);
+      const fields = [
+        ["Calories", hasCalories ? `${formatNumber(parsed.calories, 0)} kcal` : "missing"],
+        ["Protein", hasProtein ? `${formatNumber(parsed.proteinG, 1)} g` : "missing"],
+        ["Serving", hasServing ? `${formatNumber(parsed.servingG, 0)} g` : "missing"],
+      ];
+
+      ocrFields.innerHTML = fields.map(([label, value]) => `
+        <div class="ocr-field">
+          <div class="ocr-field-label">${escapeHtml(label)}</div>
+          <div class="ocr-field-value">${escapeHtml(value)}</div>
+        </div>
+      `).join("");
+      ocrText.textContent = rawText.trim() || "(no OCR text)";
+      ocrDetails.hidden = false;
+      ocrDetails.open = open;
+    }
+
+    function showLabelResult(parsed, rawText, file) {
+      showLabelPreview(file);
+      productTitle.textContent = parsed.labelType === "nutrition_facts" ? "Nutrition label" : "Label scan";
+      productMeta.textContent = file.name || "OCR from photo";
+
+      const hasProtein = Number.isFinite(parsed.proteinG) && parsed.proteinG >= 0;
+      const hasCalories = Number.isFinite(parsed.calories) && parsed.calories > 0;
+      const hasServing = Number.isFinite(parsed.servingG) && parsed.servingG > 0;
+      const proteinPercent = hasProtein && hasCalories ? (parsed.proteinG * 4 * 100) / parsed.calories : NaN;
+      const energyDensity = hasCalories && hasServing ? parsed.calories / parsed.servingG : NaN;
+
+      proteinPercentEl.textContent = Number.isFinite(proteinPercent) ? `${formatNumber(proteinPercent, 1)}%` : "--";
+      energyDensityEl.textContent = Number.isFinite(energyDensity) ? formatNumber(energyDensity, 2) : "--";
+      proteinRawEl.textContent = hasProtein ? `${formatNumber(parsed.proteinG, 1)} g/serving` : "--";
+      energyRawEl.textContent = hasCalories ? `${formatNumber(parsed.calories, 0)} kcal/serving` : "--";
+
+      showOcrDetails(parsed, rawText, !hasProtein || !hasCalories || !hasServing);
+
+      if (hasProtein && hasCalories && hasServing) {
+        if (proteinPercent > 105) {
+          setNotice("Calculated from OCR. Protein calories exceed total calories, so check the label text below.", "warn");
+        } else if (parsed.warnings.length) {
+          setNotice(`Calculated from OCR. ${parsed.warnings.join(" ")}`, "warn");
+        } else {
+          setNotice("Calculated from OCR serving-size fields. Check extracted fields before trusting it.", "good");
+        }
+      } else {
+        const missing = [];
+        if (!hasCalories) missing.push("calories");
+        if (!hasProtein) missing.push("protein");
+        if (!hasServing) missing.push("serving grams");
+        setNotice(`OCR finished, but could not extract ${missing.join(", ")}. Open the OCR text below.`, "warn");
       }
     }
 
@@ -764,6 +941,170 @@
       return { notFound: true };
     }
 
+    function cleanOcrLine(line) {
+      return line
+        .replace(/\u00a0/g, " ")
+        .replace(/[|]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function normalizeOcrText(rawText) {
+      return String(rawText || "")
+        .replace(/\r/g, "\n")
+        .split("\n")
+        .map(cleanOcrLine)
+        .filter(Boolean)
+        .join("\n");
+    }
+
+    function parseOcrNumber(value) {
+      const cleaned = String(value || "")
+        .replace(/[Oo]/g, "0")
+        .replace(/[Il]/g, "1")
+        .replace(",", ".");
+      const number = Number(cleaned);
+      return Number.isFinite(number) ? number : NaN;
+    }
+
+    function findCalories(lines) {
+      for (const line of lines) {
+        if (!/\bcalor/i.test(line) || /from\s+fat/i.test(line)) continue;
+
+        const direct = line.match(/calor(?:y|ies)?[^0-9OIl]{0,24}([0-9OIl]{1,4}(?:[.,][0-9OIl]{1,2})?)/i);
+        const loose = line.match(/([0-9OIl]{1,4}(?:[.,][0-9OIl]{1,2})?)/);
+        const value = parseOcrNumber((direct || loose || [])[1]);
+
+        if (value > 0 && value < 2000) return { value, line };
+      }
+
+      return { value: NaN, line: "" };
+    }
+
+    function findProtein(lines) {
+      for (const line of lines) {
+        if (!/\bprotein\b/i.test(line)) continue;
+
+        const after = line.match(/protein[^0-9OIl]{0,24}([0-9OIl]{1,4}(?:[.,][0-9OIl]{1,2})?)\s*(?:g|q|grams?)?/i);
+        const before = line.match(/([0-9OIl]{1,4}(?:[.,][0-9OIl]{1,2})?)\s*(?:g|q|grams?)\s+protein/i);
+        const value = parseOcrNumber((after || before || [])[1]);
+
+        if (value >= 0 && value < 300) return { value, line };
+      }
+
+      return { value: NaN, line: "" };
+    }
+
+    function findServing(lines, fullText) {
+      const servingIndex = lines.findIndex((line) => /serving\s+size/i.test(line));
+      const windows = [];
+
+      if (servingIndex >= 0) {
+        windows.push(lines.slice(servingIndex, servingIndex + 3).join(" "));
+      }
+
+      const globalServing = fullText.match(/serving\s+size[\s\S]{0,100}/i);
+      if (globalServing) windows.push(globalServing[0].replace(/\n/g, " "));
+
+      for (const chunk of windows) {
+        const grams = chunk.match(/([0-9OIl]{1,4}(?:[.,][0-9OIl]{1,2})?)\s*(?:g|grams?)\b/i);
+        if (grams) {
+          const value = parseOcrNumber(grams[1]);
+          if (value > 0 && value < 2000) return { value, line: chunk, unit: "g", assumed: false };
+        }
+
+        const ml = chunk.match(/([0-9OIl]{1,4}(?:[.,][0-9OIl]{1,2})?)\s*(?:ml|mL|milliliters?)\b/i);
+        if (ml) {
+          const value = parseOcrNumber(ml[1]);
+          if (value > 0 && value < 2000) return { value, line: chunk, unit: "ml", assumed: true };
+        }
+
+        const ounces = chunk.match(/([0-9OIl]{1,3}(?:[.,][0-9OIl]{1,2})?)\s*(?:oz|ounces?)\b/i);
+        if (ounces) {
+          const value = parseOcrNumber(ounces[1]);
+          if (value > 0 && value < 40) return { value: value * 28.3495, line: chunk, unit: "oz", assumed: true };
+        }
+      }
+
+      return { value: NaN, line: "", unit: "", assumed: false };
+    }
+
+    function parseNutritionText(rawText) {
+      const text = normalizeOcrText(rawText);
+      const lines = text.split("\n").filter(Boolean);
+      const calories = findCalories(lines);
+      const protein = findProtein(lines);
+      const serving = findServing(lines, text);
+      const hasNutritionSignal = /nutrition\s+facts|serving\s+size|\bcalories\b|\bprotein\b/i.test(text);
+      const warnings = [];
+
+      if (serving.assumed && serving.unit === "ml") {
+        warnings.push("Serving size was in ml, so grams are estimated as 1 ml = 1 g.");
+      } else if (serving.assumed && serving.unit === "oz") {
+        warnings.push("Serving size was converted from ounces to grams.");
+      }
+
+      return {
+        labelType: hasNutritionSignal ? "nutrition_facts" : "unknown_label",
+        calories: calories.value,
+        proteinG: protein.value,
+        servingG: serving.value,
+        sourceLines: {
+          calories: calories.line,
+          protein: protein.line,
+          serving: serving.line,
+        },
+        warnings,
+        text,
+      };
+    }
+
+    async function readLabelImage(file) {
+      if (!file || ocrBusy) return;
+      if (!window.Tesseract?.recognize) {
+        setNotice("Tesseract OCR did not load. Reload the page and try again.", "warn");
+        return;
+      }
+
+      stopScanner();
+      ocrBusy = true;
+      setBusy(true);
+      showLabelPreview(file);
+      productTitle.textContent = "Reading label";
+      productMeta.textContent = file.name || "OCR from photo";
+      proteinPercentEl.textContent = "--";
+      energyDensityEl.textContent = "--";
+      proteinRawEl.textContent = "--";
+      energyRawEl.textContent = "--";
+      resetOcrDetails();
+      setNotice("OCR runs locally in this browser. This may take a moment on the first label.", "");
+      setStatus("Reading label.", "Loading OCR...");
+
+      try {
+        const result = await window.Tesseract.recognize(file, "eng", {
+          logger: (message) => {
+            if (!message || !message.status) return;
+            const progress = Number.isFinite(message.progress)
+              ? ` ${Math.round(message.progress * 100)}%`
+              : "";
+            setStatus("Reading label.", `${message.status}${progress}`);
+          },
+        });
+
+        const rawText = result?.data?.text || "";
+        const parsed = parseNutritionText(rawText);
+        showLabelResult(parsed, rawText, file);
+      } catch (error) {
+        showEmptyProduct("OCR failed", file.name || "Label image");
+        setNotice(error.message || "Could not read text from this image.", "warn");
+      } finally {
+        ocrBusy = false;
+        setBusy(false);
+        setStatus("Ready.", "Tap scan for another product or label.");
+        labelInput.value = "";
+      }
+    }
+
     function stopScanner() {
       clearInterval(scanTimer);
       scanTimer = null;
@@ -788,6 +1129,7 @@
       }
       idle.hidden = false;
       startBtn.disabled = false;
+      labelBtn.disabled = false;
       stopBtn.disabled = true;
     }
 
@@ -800,6 +1142,7 @@
       stopScanner();
       lastBarcode = "";
       startBtn.disabled = true;
+      labelBtn.disabled = true;
       stopBtn.disabled = false;
       idle.hidden = true;
       scanStartedAt = Date.now();
@@ -886,6 +1229,11 @@
     }
 
     startBtn.addEventListener("click", startScanner);
+    labelBtn.addEventListener("click", () => labelInput.click());
+    labelInput.addEventListener("change", () => {
+      const file = labelInput.files && labelInput.files[0];
+      if (file) readLabelImage(file);
+    });
     stopBtn.addEventListener("click", () => {
       stopScanner();
       setStatus("Stopped.");
