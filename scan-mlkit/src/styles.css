@@ -68,7 +68,7 @@ h1 {
 
 .actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1.25fr 1fr 1fr;
   gap: 10px;
   margin-bottom: 14px;
 }
@@ -170,6 +170,10 @@ pre {
   }
 
   .metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .actions {
     grid-template-columns: 1fr;
   }
 }

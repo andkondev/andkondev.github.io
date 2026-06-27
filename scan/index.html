@@ -201,63 +201,10 @@
       font-weight: 680;
     }
 
-    .engine-picker {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex: 1 1 auto;
-      min-width: 180px;
-    }
-
-    .engine-label {
-      color: var(--muted);
-      font-size: 13px;
-      white-space: nowrap;
-    }
-
-    .engine-options {
-      display: inline-grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      overflow: hidden;
-      background: #fffdf8;
-    }
-
-    .engine-option {
-      position: relative;
-      min-width: 88px;
-      min-height: 38px;
-      display: grid;
-      place-items: center;
-      cursor: pointer;
-      color: var(--muted);
-      font-size: 13px;
-      font-weight: 720;
-    }
-
-    .engine-option + .engine-option {
-      border-left: 1px solid var(--line);
-    }
-
-    .engine-option input {
-      position: absolute;
-      inset: 0;
-      opacity: 0;
-      cursor: pointer;
-    }
-
-    .engine-option:has(input:checked) {
-      color: #fff;
-      background: var(--accent);
-    }
-
     .actions {
       display: flex;
       gap: 10px;
       flex: 0 0 auto;
-      flex-wrap: wrap;
-      justify-content: flex-end;
     }
 
     .btn {
@@ -450,68 +397,6 @@
       background: #f0fff5;
     }
 
-    .file-input {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    .ocr-details {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #fffdf8;
-      overflow: hidden;
-    }
-
-    .ocr-details summary {
-      cursor: pointer;
-      padding: 13px 14px;
-      color: var(--ink);
-      font-weight: 720;
-    }
-
-    .ocr-fields {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 8px;
-      padding: 0 14px 14px;
-    }
-
-    .ocr-field {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 10px;
-      min-width: 0;
-      background: #faf7f0;
-    }
-
-    .ocr-field-label {
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.2;
-      margin-bottom: 5px;
-    }
-
-    .ocr-field-value {
-      font-size: 15px;
-      font-weight: 720;
-      overflow-wrap: anywhere;
-    }
-
-    .ocr-text {
-      margin: 0;
-      max-height: 260px;
-      overflow: auto;
-      padding: 14px;
-      border-top: 1px solid var(--line);
-      background: #f5f1e8;
-      color: var(--ink);
-      white-space: pre-wrap;
-      font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    }
-
     [hidden] {
       display: none !important;
     }
@@ -552,25 +437,12 @@
         align-items: stretch;
       }
 
-      .engine-picker {
-        width: 100%;
-        justify-content: space-between;
-      }
-
-      .engine-options {
-        flex: 1 1 auto;
-      }
-
       .actions {
         width: 100%;
       }
 
       .btn {
         flex: 1;
-      }
-
-      .ocr-fields {
-        grid-template-columns: 1fr;
       }
 
       .result-head {
@@ -605,7 +477,7 @@
         </div>
         <h1>Protein Scan</h1>
       </div>
-      <div class="source">Barcode + label OCR</div>
+      <div class="source">Open Food Facts lookup</div>
     </header>
 
     <main>
@@ -624,19 +496,6 @@
         </div>
         <div class="controls">
           <div class="status" id="status"><strong>Ready.</strong> Waiting for camera.</div>
-          <div class="engine-picker" aria-label="OCR engine">
-            <div class="engine-label">OCR</div>
-            <div class="engine-options">
-              <label class="engine-option">
-                <input type="radio" name="ocrEngine" value="tesseract" checked>
-                <span>Tesseract</span>
-              </label>
-              <label class="engine-option">
-                <input type="radio" name="ocrEngine" value="paddle">
-                <span>Paddle</span>
-              </label>
-            </div>
-          </div>
           <div class="actions">
             <button class="btn" id="startBtn" type="button">
               <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -644,26 +503,12 @@
               </svg>
               Scan
             </button>
-            <button class="btn secondary" id="labelBtn" type="button">
-              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M6 5h12v14H6zM9 9h6M9 12h6M9 15h3" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              Label
-            </button>
-            <button class="btn secondary" id="fileBtn" type="button">
-              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M5 7h5l2 2h7v8H5z" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              File
-            </button>
             <button class="btn secondary" id="stopBtn" type="button" disabled>
               <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M8 8h8v8H8z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>
               </svg>
               Stop
             </button>
-            <input class="file-input" id="labelInput" type="file" accept="image/*" capture="environment">
-            <input class="file-input" id="fileInput" type="file" accept="image/*">
           </div>
         </div>
       </section>
@@ -711,29 +556,17 @@
           </div>
 
           <div class="notice" id="notice">Results use per-100g nutrition fields when available.</div>
-
-          <details class="ocr-details" id="ocrDetails" hidden>
-            <summary>OCR text and extracted fields</summary>
-            <div class="ocr-fields" id="ocrFields"></div>
-            <pre class="ocr-text" id="ocrText"></pre>
-          </details>
         </div>
       </section>
     </main>
   </div>
 
   <script src="https://unpkg.com/@zxing/browser@0.2.0/umd/zxing-browser.min.js"></script>
-  <script src="https://unpkg.com/tesseract.js@7.0.0/dist/tesseract.min.js"></script>
   <script>
     const video = document.getElementById("video");
     const idle = document.getElementById("idle");
     const statusEl = document.getElementById("status");
     const startBtn = document.getElementById("startBtn");
-    const labelBtn = document.getElementById("labelBtn");
-    const labelInput = document.getElementById("labelInput");
-    const fileBtn = document.getElementById("fileBtn");
-    const fileInput = document.getElementById("fileInput");
-    const engineInputs = document.querySelectorAll('input[name="ocrEngine"]');
     const stopBtn = document.getElementById("stopBtn");
     const productImg = document.getElementById("productImg");
     const placeholderImg = document.getElementById("placeholderImg");
@@ -744,9 +577,6 @@
     const proteinRawEl = document.getElementById("proteinRaw");
     const energyRawEl = document.getElementById("energyRaw");
     const noticeEl = document.getElementById("notice");
-    const ocrDetails = document.getElementById("ocrDetails");
-    const ocrFields = document.getElementById("ocrFields");
-    const ocrText = document.getElementById("ocrText");
 
     let reader = null;
     let controls = null;
@@ -757,22 +587,6 @@
     let scanStartedAt = 0;
     let lastBarcode = "";
     let lookupBusy = false;
-    let ocrBusy = false;
-    let imageObjectUrl = "";
-    let currentImageInfo = null;
-    let paddleLoader = null;
-    let ocrTimer = null;
-    let ocrStartedAt = 0;
-    let ocrLastProgressAt = 0;
-    let ocrPhase = "";
-    let ocrEngineInProgress = "";
-    let ocrStallNoticeShown = false;
-
-    const PADDLE_ASSETS_URL = "https://cdn.jsdelivr.net/npm/paddleocr-browser@1.0.3/dist/";
-    const PADDLE_MODULE_URL = "https://cdn.jsdelivr.net/npm/esearch-ocr@5.1.5/dist/esearch-ocr.js";
-    const PADDLE_ORT_URL = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.27.0/dist/ort.min.js";
-    const PADDLE_ORT_WASM_URL = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.27.0/dist/";
-    const PADDLE_OPENCV_URL = "https://docs.opencv.org/4.8.0/opencv.js";
 
     function setStatus(strong, text = "") {
       statusEl.innerHTML = `<strong>${escapeHtml(strong)}</strong>${text ? " " + escapeHtml(text) : ""}`;
@@ -781,84 +595,6 @@
     function setNotice(text, type = "") {
       noticeEl.textContent = text;
       noticeEl.className = `notice${type ? " " + type : ""}`;
-    }
-
-    function resetOcrDetails() {
-      ocrDetails.hidden = true;
-      ocrDetails.open = false;
-      ocrFields.innerHTML = "";
-      ocrText.textContent = "";
-    }
-
-    function clearImageObjectUrl() {
-      if (imageObjectUrl) {
-        URL.revokeObjectURL(imageObjectUrl);
-        imageObjectUrl = "";
-      }
-      currentImageInfo = null;
-    }
-
-    function setBusy(isBusy) {
-      startBtn.disabled = isBusy;
-      labelBtn.disabled = isBusy;
-      fileBtn.disabled = isBusy;
-      engineInputs.forEach((input) => {
-        input.disabled = isBusy;
-      });
-      stopBtn.disabled = isBusy || (!controls && !activeStream);
-    }
-
-    function formatDuration(ms) {
-      const seconds = Math.max(0, Math.round(ms / 1000));
-      if (seconds < 60) return `${seconds}s`;
-      const minutes = Math.floor(seconds / 60);
-      const remainder = seconds % 60;
-      return `${minutes}m ${remainder}s`;
-    }
-
-    function renderOcrProgress() {
-      if (!ocrBusy || !ocrStartedAt) return;
-
-      const now = Date.now();
-      const elapsed = formatDuration(now - ocrStartedAt);
-      const idleSeconds = Math.round((now - ocrLastProgressAt) / 1000);
-      const idleText = idleSeconds >= 10 ? ` - no new progress ${idleSeconds}s` : "";
-      setStatus("Reading label.", `${ocrEngineInProgress} - ${ocrPhase || "working"} - ${elapsed} elapsed${idleText}`);
-
-      if (idleSeconds >= 45 && !ocrStallNoticeShown) {
-        ocrStallNoticeShown = true;
-        setNotice(`${ocrEngineInProgress} has not reported progress for ${idleSeconds}s. It may still be working, but if this sits much longer, reload and try a tighter/smaller label photo.`, "warn");
-      }
-    }
-
-    function startOcrMonitor(engineName, initialPhase) {
-      stopOcrMonitor();
-      ocrEngineInProgress = engineName;
-      ocrPhase = initialPhase;
-      ocrStartedAt = Date.now();
-      ocrLastProgressAt = ocrStartedAt;
-      ocrStallNoticeShown = false;
-      renderOcrProgress();
-      ocrTimer = setInterval(renderOcrProgress, 1000);
-    }
-
-    function updateOcrProgress(message) {
-      ocrPhase = message || "working";
-      ocrLastProgressAt = Date.now();
-      ocrStallNoticeShown = false;
-      renderOcrProgress();
-    }
-
-    function stopOcrMonitor() {
-      if (ocrTimer) {
-        clearInterval(ocrTimer);
-        ocrTimer = null;
-      }
-      ocrStartedAt = 0;
-      ocrLastProgressAt = 0;
-      ocrPhase = "";
-      ocrEngineInProgress = "";
-      ocrStallNoticeShown = false;
     }
 
     function escapeHtml(value) {
@@ -877,42 +613,6 @@
         maximumFractionDigits: digits,
         minimumFractionDigits: digits,
       });
-    }
-
-    function formatBytes(bytes) {
-      if (!Number.isFinite(bytes) || bytes <= 0) return "unknown";
-      const units = ["B", "KB", "MB", "GB"];
-      let value = bytes;
-      let unitIndex = 0;
-      while (value >= 1024 && unitIndex < units.length - 1) {
-        value /= 1024;
-        unitIndex += 1;
-      }
-      const digits = value >= 10 || unitIndex === 0 ? 0 : 1;
-      return `${formatNumber(value, digits)} ${units[unitIndex]}`;
-    }
-
-    function formatImageDimensions(info) {
-      if (!info || !Number.isFinite(info.width) || !Number.isFinite(info.height)) return "unknown";
-      return `${info.width}x${info.height}`;
-    }
-
-    function formatLabelMeta(file, engineName, imageInfo) {
-      return [
-        file.name || "OCR from photo",
-        engineName,
-        formatImageDimensions(imageInfo),
-        formatBytes(file.size),
-      ].filter(Boolean).join(" - ");
-    }
-
-    function selectedOcrEngine() {
-      const checked = document.querySelector('input[name="ocrEngine"]:checked');
-      return checked?.value || "tesseract";
-    }
-
-    function ocrEngineName(engine) {
-      return engine === "paddle" ? "PaddleOCR" : "Tesseract";
     }
 
     function normalizeBarcode(raw) {
@@ -955,8 +655,6 @@
     }
 
     function showEmptyProduct(title, meta) {
-      clearImageObjectUrl();
-      resetOcrDetails();
       productTitle.textContent = title;
       productMeta.textContent = meta;
       productImg.hidden = true;
@@ -969,8 +667,6 @@
     }
 
     function showProduct(product, barcode) {
-      clearImageObjectUrl();
-      resetOcrDetails();
       const nutriments = product.nutriments || {};
       const protein100g = getProtein100g(nutriments);
       const kcal100g = getKcal100g(nutriments);
@@ -1007,104 +703,6 @@
         setNotice("Product found with zero calories per 100g; protein percentage cannot be calculated.", "warn");
       } else {
         setNotice("Calculated from Open Food Facts per-100g nutrition fields.", "good");
-      }
-    }
-
-    function showLabelPreview(file) {
-      clearImageObjectUrl();
-      imageObjectUrl = URL.createObjectURL(file);
-      productImg.src = imageObjectUrl;
-      productImg.hidden = false;
-      placeholderImg.hidden = true;
-      return imageObjectUrl;
-    }
-
-    function readImageInfo(file, src) {
-      return new Promise((resolve) => {
-        const image = new Image();
-        const finish = () => resolve({
-          width: image.naturalWidth || image.width || NaN,
-          height: image.naturalHeight || image.height || NaN,
-          size: file.size,
-          type: file.type || "unknown",
-        });
-
-        image.onload = finish;
-        image.onerror = () => resolve({
-          width: NaN,
-          height: NaN,
-          size: file.size,
-          type: file.type || "unknown",
-        });
-        image.src = src;
-      });
-    }
-
-    function showOcrDetails(parsed, rawText, open = false, context = {}) {
-      const hasCalories = Number.isFinite(parsed.calories);
-      const hasProtein = Number.isFinite(parsed.proteinG);
-      const hasServing = Number.isFinite(parsed.servingG);
-      const confidence = Number.isFinite(context.confidence) ? `${formatNumber(context.confidence * 100, 0)}%` : "n/a";
-      const fields = [
-        ["Calories", hasCalories ? `${formatNumber(parsed.calories, 0)} kcal` : "missing"],
-        ["Protein", hasProtein ? `${formatNumber(parsed.proteinG, 1)} g` : "missing"],
-        ["Serving", hasServing ? `${formatNumber(parsed.servingG, 0)} g` : "missing"],
-        ["Engine", context.engineName || "OCR"],
-        ["Image", formatImageDimensions(context.imageInfo)],
-        ["File", `${formatBytes(context.fileSize)} ${context.fileType ? `(${context.fileType})` : ""}`.trim()],
-        ["OCR confidence", confidence],
-        ["OCR items", Number.isFinite(context.itemCount) ? formatNumber(context.itemCount, 0) : "n/a"],
-      ];
-
-      ocrFields.innerHTML = fields.map(([label, value]) => `
-        <div class="ocr-field">
-          <div class="ocr-field-label">${escapeHtml(label)}</div>
-          <div class="ocr-field-value">${escapeHtml(value)}</div>
-        </div>
-      `).join("");
-      ocrText.textContent = rawText.trim() || "(no OCR text)";
-      ocrDetails.hidden = false;
-      ocrDetails.open = open;
-    }
-
-    function showLabelResult(parsed, rawText, file, context = {}) {
-      showLabelPreview(file);
-      currentImageInfo = context.imageInfo || currentImageInfo;
-      productTitle.textContent = parsed.labelType === "nutrition_facts" ? "Nutrition label" : "Label scan";
-      productMeta.textContent = formatLabelMeta(file, context.engineName || "OCR", currentImageInfo);
-
-      const hasProtein = Number.isFinite(parsed.proteinG) && parsed.proteinG >= 0;
-      const hasCalories = Number.isFinite(parsed.calories) && parsed.calories > 0;
-      const hasServing = Number.isFinite(parsed.servingG) && parsed.servingG > 0;
-      const proteinPercent = hasProtein && hasCalories ? (parsed.proteinG * 4 * 100) / parsed.calories : NaN;
-      const energyDensity = hasCalories && hasServing ? parsed.calories / parsed.servingG : NaN;
-
-      proteinPercentEl.textContent = Number.isFinite(proteinPercent) ? `${formatNumber(proteinPercent, 1)}%` : "--";
-      energyDensityEl.textContent = Number.isFinite(energyDensity) ? formatNumber(energyDensity, 2) : "--";
-      proteinRawEl.textContent = hasProtein ? `${formatNumber(parsed.proteinG, 1)} g/serving` : "--";
-      energyRawEl.textContent = hasCalories ? `${formatNumber(parsed.calories, 0)} kcal/serving` : "--";
-
-      showOcrDetails(parsed, rawText, !hasProtein || !hasCalories || !hasServing, {
-        ...context,
-        fileSize: file.size,
-        fileType: file.type || "",
-        imageInfo: currentImageInfo,
-      });
-
-      if (hasProtein && hasCalories && hasServing) {
-        if (proteinPercent > 105) {
-          setNotice("Calculated from OCR. Protein calories exceed total calories, so check the label text below.", "warn");
-        } else if (parsed.warnings.length) {
-          setNotice(`Calculated from OCR. ${parsed.warnings.join(" ")}`, "warn");
-        } else {
-          setNotice("Calculated from OCR serving-size fields. Check extracted fields before trusting it.", "good");
-        }
-      } else {
-        const missing = [];
-        if (!hasCalories) missing.push("calories");
-        if (!hasProtein) missing.push("protein");
-        if (!hasServing) missing.push("serving grams");
-        setNotice(`OCR finished, but could not extract ${missing.join(", ")}. Open the OCR text below.`, "warn");
       }
     }
 
@@ -1166,363 +764,6 @@
       return { notFound: true };
     }
 
-    function cleanOcrLine(line) {
-      return line
-        .replace(/\u00a0/g, " ")
-        .replace(/[|]/g, " ")
-        .replace(/\s+/g, " ")
-        .trim();
-    }
-
-    function normalizeOcrText(rawText) {
-      return String(rawText || "")
-        .replace(/\r/g, "\n")
-        .split("\n")
-        .map(cleanOcrLine)
-        .filter(Boolean)
-        .join("\n");
-    }
-
-    function parseOcrNumber(value) {
-      const cleaned = String(value || "")
-        .replace(/[Oo]/g, "0")
-        .replace(/[Il]/g, "1")
-        .replace(",", ".");
-      const number = Number(cleaned);
-      return Number.isFinite(number) ? number : NaN;
-    }
-
-    function findCalories(lines) {
-      for (const line of lines) {
-        if (!/\bcalor/i.test(line) || /from\s+fat/i.test(line)) continue;
-
-        const direct = line.match(/calor(?:y|ies)?[^0-9OIl]{0,24}([0-9OIl]{1,4}(?:[.,][0-9OIl]{1,2})?)/i);
-        const loose = line.match(/([0-9OIl]{1,4}(?:[.,][0-9OIl]{1,2})?)/);
-        const value = parseOcrNumber((direct || loose || [])[1]);
-
-        if (value > 0 && value < 2000) return { value, line };
-      }
-
-      return { value: NaN, line: "" };
-    }
-
-    function findProtein(lines) {
-      for (const line of lines) {
-        if (!/\bprotein\b/i.test(line)) continue;
-
-        const after = line.match(/protein[^0-9OIl]{0,24}([0-9OIl]{1,4}(?:[.,][0-9OIl]{1,2})?)\s*(?:g|q|grams?)?/i);
-        const before = line.match(/([0-9OIl]{1,4}(?:[.,][0-9OIl]{1,2})?)\s*(?:g|q|grams?)\s+protein/i);
-        const value = parseOcrNumber((after || before || [])[1]);
-
-        if (value >= 0 && value < 300) return { value, line };
-      }
-
-      return { value: NaN, line: "" };
-    }
-
-    function findServing(lines, fullText) {
-      const servingIndex = lines.findIndex((line) => /serving\s+size/i.test(line));
-      const windows = [];
-
-      if (servingIndex >= 0) {
-        windows.push(lines.slice(servingIndex, servingIndex + 3).join(" "));
-      }
-
-      const globalServing = fullText.match(/serving\s+size[\s\S]{0,100}/i);
-      if (globalServing) windows.push(globalServing[0].replace(/\n/g, " "));
-
-      for (const chunk of windows) {
-        const grams = chunk.match(/([0-9OIl]{1,4}(?:[.,][0-9OIl]{1,2})?)\s*(?:g|grams?)\b/i);
-        if (grams) {
-          const value = parseOcrNumber(grams[1]);
-          if (value > 0 && value < 2000) return { value, line: chunk, unit: "g", assumed: false };
-        }
-
-        const ml = chunk.match(/([0-9OIl]{1,4}(?:[.,][0-9OIl]{1,2})?)\s*(?:ml|mL|milliliters?)\b/i);
-        if (ml) {
-          const value = parseOcrNumber(ml[1]);
-          if (value > 0 && value < 2000) return { value, line: chunk, unit: "ml", assumed: true };
-        }
-
-        const ounces = chunk.match(/([0-9OIl]{1,3}(?:[.,][0-9OIl]{1,2})?)\s*(?:oz|ounces?)\b/i);
-        if (ounces) {
-          const value = parseOcrNumber(ounces[1]);
-          if (value > 0 && value < 40) return { value: value * 28.3495, line: chunk, unit: "oz", assumed: true };
-        }
-      }
-
-      return { value: NaN, line: "", unit: "", assumed: false };
-    }
-
-    function parseNutritionText(rawText) {
-      const text = normalizeOcrText(rawText);
-      const lines = text.split("\n").filter(Boolean);
-      const calories = findCalories(lines);
-      const protein = findProtein(lines);
-      const serving = findServing(lines, text);
-      const hasNutritionSignal = /nutrition\s+facts|serving\s+size|\bcalories\b|\bprotein\b/i.test(text);
-      const warnings = [];
-
-      if (serving.assumed && serving.unit === "ml") {
-        warnings.push("Serving size was in ml, so grams are estimated as 1 ml = 1 g.");
-      } else if (serving.assumed && serving.unit === "oz") {
-        warnings.push("Serving size was converted from ounces to grams.");
-      }
-
-      return {
-        labelType: hasNutritionSignal ? "nutrition_facts" : "unknown_label",
-        calories: calories.value,
-        proteinG: protein.value,
-        servingG: serving.value,
-        sourceLines: {
-          calories: calories.line,
-          protein: protein.line,
-          serving: serving.line,
-        },
-        warnings,
-        text,
-      };
-    }
-
-    function loadExternalScript(src) {
-      const existing = Array.from(document.scripts).find((script) => script.src === src);
-      if (existing?.dataset.loaded === "true") return Promise.resolve();
-      if (existing?.dataset.loading === "true") {
-        return new Promise((resolve, reject) => {
-          existing.addEventListener("load", resolve, { once: true });
-          existing.addEventListener("error", reject, { once: true });
-        });
-      }
-
-      return new Promise((resolve, reject) => {
-        const script = document.createElement("script");
-        script.src = src;
-        script.dataset.loading = "true";
-        script.onload = () => {
-          script.dataset.loading = "false";
-          script.dataset.loaded = "true";
-          resolve();
-        };
-        script.onerror = () => reject(new Error(`Could not load ${src}`));
-        document.head.appendChild(script);
-      });
-    }
-
-    async function loadOpenCv(onProgress = () => {}) {
-      if (window.cv?.Mat) return window.cv;
-
-      return new Promise((resolve, reject) => {
-        let settled = false;
-        let thenAttached = false;
-        let scriptLoaded = false;
-        let progressInterval = null;
-        const done = (cv) => {
-          if (settled) return;
-          settled = true;
-          window.clearInterval(interval);
-          if (progressInterval) window.clearInterval(progressInterval);
-          window.clearTimeout(timeout);
-          resolve(cv || window.cv);
-        };
-        const fail = (error) => {
-          if (settled) return;
-          settled = true;
-          window.clearInterval(interval);
-          if (progressInterval) window.clearInterval(progressInterval);
-          window.clearTimeout(timeout);
-          reject(error);
-        };
-        const checkReady = () => {
-          if (window.cv?.Mat) {
-            done(window.cv);
-            return;
-          }
-
-          if (!thenAttached && typeof window.cv?.then === "function") {
-            thenAttached = true;
-            try {
-              window.cv.then(done, fail);
-            } catch (error) {
-              fail(error);
-            }
-          }
-        };
-        const interval = window.setInterval(checkReady, 250);
-        const timeout = window.setTimeout(() => {
-          fail(new Error("OpenCV did not finish initializing. PaddleOCR may be too heavy for this browser; try Tesseract or reload and try a smaller/cropped label photo."));
-        }, 60000);
-
-        window.Module = window.Module || {};
-        const previousInit = window.Module.onRuntimeInitialized;
-        window.Module.onRuntimeInitialized = () => {
-          if (typeof previousInit === "function") previousInit();
-          done(window.cv);
-        };
-
-        loadExternalScript(PADDLE_OPENCV_URL)
-          .then(() => {
-            scriptLoaded = true;
-            onProgress("Waiting for OpenCV runtime");
-            checkReady();
-          })
-          .catch(fail);
-
-        progressInterval = window.setInterval(() => {
-          if (settled) {
-            window.clearInterval(progressInterval);
-            return;
-          }
-          onProgress(scriptLoaded ? "Waiting for OpenCV runtime" : "Downloading OpenCV");
-          checkReady();
-        }, 5000);
-      });
-    }
-
-    async function loadPaddleOcr(onProgress) {
-      if (paddleLoader) return paddleLoader;
-
-      paddleLoader = (async () => {
-        onProgress("Loading ONNX runtime");
-        await loadExternalScript(PADDLE_ORT_URL);
-
-        if (!window.ort) throw new Error("ONNX runtime did not load.");
-        window.ort.env.wasm.wasmPaths = PADDLE_ORT_WASM_URL;
-        window.ort.env.wasm.numThreads = 1;
-
-        onProgress("Loading OpenCV");
-        const cv = await loadOpenCv(onProgress);
-
-        onProgress("Loading PaddleOCR module");
-        const Paddle = await import(PADDLE_MODULE_URL);
-
-        onProgress("Loading PaddleOCR model");
-        const dicResponse = await fetch(`${PADDLE_ASSETS_URL}ppocr_keys_v1.txt`);
-        if (!dicResponse.ok) throw new Error(`PaddleOCR dictionary returned ${dicResponse.status}`);
-        const dic = await dicResponse.text();
-
-        await Paddle.init({
-          detPath: `${PADDLE_ASSETS_URL}ppocr_det.onnx`,
-          recPath: `${PADDLE_ASSETS_URL}ppocr_rec.onnx`,
-          dic,
-          ort: window.ort,
-          node: false,
-          cv,
-          dev: false,
-          onProgress: (stage, total, current) => {
-            if (!stage) return;
-            const suffix = Number.isFinite(total) && Number.isFinite(current) && total > 1
-              ? ` ${current}/${total}`
-              : "";
-            onProgress(`PaddleOCR ${stage}${suffix}`);
-          },
-        });
-
-        return Paddle;
-      })();
-
-      return paddleLoader;
-    }
-
-    function averagePaddleConfidence(items) {
-      const scores = items
-        .map((item) => Number(item.mean))
-        .filter((score) => Number.isFinite(score));
-      if (!scores.length) return NaN;
-      return scores.reduce((sum, score) => sum + score, 0) / scores.length;
-    }
-
-    async function runTesseractOcr(file, onProgress) {
-      if (!window.Tesseract?.recognize) {
-        throw new Error("Tesseract OCR did not load. Reload the page and try again.");
-      }
-
-      const result = await window.Tesseract.recognize(file, "eng", {
-        logger: (message) => {
-          if (!message || !message.status) return;
-          const progress = Number.isFinite(message.progress)
-            ? ` ${Math.round(message.progress * 100)}%`
-            : "";
-          onProgress(`${message.status}${progress}`);
-        },
-      });
-
-      const words = Array.isArray(result?.data?.words) ? result.data.words : [];
-      const confidences = words
-        .map((word) => Number(word.confidence))
-        .filter((confidence) => Number.isFinite(confidence));
-      const confidence = confidences.length
-        ? confidences.reduce((sum, value) => sum + value, 0) / confidences.length / 100
-        : NaN;
-
-      return {
-        rawText: result?.data?.text || "",
-        confidence,
-        itemCount: words.length,
-      };
-    }
-
-    async function runPaddleOcr(src, onProgress) {
-      const Paddle = await loadPaddleOcr(onProgress);
-      onProgress("Running PaddleOCR");
-      const result = await Paddle.ocr(src);
-      const items = Array.isArray(result?.src) ? result.src : [];
-
-      return {
-        rawText: items.map((item) => item.text).filter(Boolean).join("\n"),
-        confidence: averagePaddleConfidence(items),
-        itemCount: items.length,
-      };
-    }
-
-    async function readLabelImage(file) {
-      if (!file || ocrBusy) return;
-
-      stopScanner();
-      ocrBusy = true;
-      setBusy(true);
-      const previewUrl = showLabelPreview(file);
-      currentImageInfo = await readImageInfo(file, previewUrl);
-      const engine = selectedOcrEngine();
-      const engineName = ocrEngineName(engine);
-      productTitle.textContent = "Reading label";
-      productMeta.textContent = formatLabelMeta(file, engineName, currentImageInfo);
-      proteinPercentEl.textContent = "--";
-      energyDensityEl.textContent = "--";
-      proteinRawEl.textContent = "--";
-      energyRawEl.textContent = "--";
-      resetOcrDetails();
-      if (engine === "paddle") {
-        setNotice("PaddleOCR loads OpenCV in the browser. If the timer freezes at 0s, the tab is blocked; try the File button on desktop or use Tesseract.", "warn");
-      } else {
-        setNotice(`${engineName} runs locally in this browser. The first run may take a moment.`, "");
-      }
-      startOcrMonitor(engineName, `Loading ${engineName}`);
-
-      try {
-        const ocrResult = engine === "paddle"
-          ? await runPaddleOcr(previewUrl, updateOcrProgress)
-          : await runTesseractOcr(file, updateOcrProgress);
-        const rawText = ocrResult.rawText || "";
-        const parsed = parseNutritionText(rawText);
-        showLabelResult(parsed, rawText, file, {
-          engineName,
-          imageInfo: currentImageInfo,
-          confidence: ocrResult.confidence,
-          itemCount: ocrResult.itemCount,
-        });
-      } catch (error) {
-        showEmptyProduct("OCR failed", file.name || "Label image");
-        setNotice(error.message || "Could not read text from this image.", "warn");
-      } finally {
-        stopOcrMonitor();
-        ocrBusy = false;
-        setBusy(false);
-        setStatus("Ready.", "Tap scan for another product or label.");
-        labelInput.value = "";
-        fileInput.value = "";
-      }
-    }
-
     function stopScanner() {
       clearInterval(scanTimer);
       scanTimer = null;
@@ -1547,8 +788,6 @@
       }
       idle.hidden = false;
       startBtn.disabled = false;
-      labelBtn.disabled = false;
-      fileBtn.disabled = false;
       stopBtn.disabled = true;
     }
 
@@ -1561,8 +800,6 @@
       stopScanner();
       lastBarcode = "";
       startBtn.disabled = true;
-      labelBtn.disabled = true;
-      fileBtn.disabled = true;
       stopBtn.disabled = false;
       idle.hidden = true;
       scanStartedAt = Date.now();
@@ -1649,16 +886,6 @@
     }
 
     startBtn.addEventListener("click", startScanner);
-    labelBtn.addEventListener("click", () => labelInput.click());
-    fileBtn.addEventListener("click", () => fileInput.click());
-    labelInput.addEventListener("change", () => {
-      const file = labelInput.files && labelInput.files[0];
-      if (file) readLabelImage(file);
-    });
-    fileInput.addEventListener("change", () => {
-      const file = fileInput.files && fileInput.files[0];
-      if (file) readLabelImage(file);
-    });
     stopBtn.addEventListener("click", () => {
       stopScanner();
       setStatus("Stopped.");
