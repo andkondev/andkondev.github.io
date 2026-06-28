@@ -221,12 +221,18 @@
       font-weight: 720;
     }
 
+    .search-field {
+      position: relative;
+      display: grid;
+      align-items: center;
+    }
+
     .search-input {
       width: 100%;
       min-height: 48px;
       border: 1px solid var(--line);
       border-radius: 8px;
-      padding: 0 14px;
+      padding: 0 58px 0 14px;
       background: #fffdf8;
       color: var(--ink);
       font: inherit;
@@ -236,6 +242,34 @@
     .search-input:focus {
       outline: 2px solid rgba(15, 123, 108, 0.24);
       border-color: var(--accent);
+    }
+
+    .search-clear {
+      position: absolute;
+      right: 4px;
+      width: 44px;
+      height: 44px;
+      min-height: 44px;
+      border: 0;
+      border-radius: 8px;
+      padding: 0;
+      display: grid;
+      place-items: center;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .search-clear:hover,
+    .search-clear:focus {
+      color: var(--ink);
+      outline: 2px solid rgba(15, 123, 108, 0.24);
+      outline-offset: -4px;
+    }
+
+    .search-clear svg {
+      width: 26px;
+      height: 26px;
     }
 
     .search-results {
@@ -599,7 +633,14 @@
         </div>
         <div class="manual-search" aria-label="Whole foods and ingredients search">
           <label class="manual-label" for="meatSearchInput">Whole foods + ingredients</label>
-          <input class="search-input" id="meatSearchInput" type="search" autocomplete="off" spellcheck="false" placeholder="80 20, banana, olive oil, sugar">
+          <div class="search-field">
+            <input class="search-input" id="meatSearchInput" type="text" autocomplete="off" spellcheck="false" placeholder="80 20, banana, olive oil, sugar">
+            <button class="search-clear" id="meatSearchClear" type="button" aria-label="Clear whole foods search">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M7 7l10 10M17 7L7 17" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+              </svg>
+            </button>
+          </div>
           <div class="search-results" id="meatResults"></div>
         </div>
       </section>
@@ -660,6 +701,7 @@
     const startBtn = document.getElementById("startBtn");
     const stopBtn = document.getElementById("stopBtn");
     const meatSearchInput = document.getElementById("meatSearchInput");
+    const meatSearchClear = document.getElementById("meatSearchClear");
     const meatResults = document.getElementById("meatResults");
     const productImg = document.getElementById("productImg");
     const placeholderImg = document.getElementById("placeholderImg");
@@ -942,7 +984,10 @@
       for (const button of meatResults.querySelectorAll(".search-result")) {
         button.addEventListener("click", () => {
           const food = meatFoods.find((item) => String(item.id) === button.dataset.id);
-          if (food) showMeatFood(food);
+          if (food) {
+            showMeatFood(food);
+            meatResults.innerHTML = "";
+          }
         });
       }
     }
@@ -1249,6 +1294,11 @@
     meatSearchInput.addEventListener("input", updateMeatSearch);
     meatSearchInput.addEventListener("focus", () => {
       loadMeatFoods().catch(() => {});
+    });
+    meatSearchClear.addEventListener("click", () => {
+      meatSearchInput.value = "";
+      meatResults.innerHTML = "";
+      meatSearchInput.focus();
     });
 
     window.addEventListener("pagehide", stopScanner);

@@ -23,7 +23,14 @@
 
       <section class="manual-search" aria-label="Whole foods and ingredients search">
         <label class="label" for="meatSearchInput">Whole foods + ingredients</label>
-        <input id="meatSearchInput" class="search-input" type="search" autocomplete="off" spellcheck="false" placeholder="80 20, banana, olive oil, sugar" />
+        <div class="search-field">
+          <input id="meatSearchInput" class="search-input" type="text" autocomplete="off" spellcheck="false" placeholder="80 20, banana, olive oil, sugar" />
+          <button class="search-clear" id="meatSearchClear" type="button" aria-label="Clear whole foods search">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M7 7l10 10M17 7L7 17" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+            </svg>
+          </button>
+        </div>
         <div id="meatResults" class="search-results"></div>
       </section>
 

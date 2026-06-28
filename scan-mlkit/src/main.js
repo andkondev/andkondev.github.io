@@ -8,6 +8,7 @@ const els = {
   cameraBtn: document.getElementById("cameraBtn"),
   galleryBtn: document.getElementById("galleryBtn"),
   meatSearchInput: document.getElementById("meatSearchInput"),
+  meatSearchClear: document.getElementById("meatSearchClear"),
   meatResults: document.getElementById("meatResults"),
   status: document.getElementById("status"),
   preview: document.getElementById("preview"),
@@ -524,7 +525,10 @@ function renderMeatResults(matches) {
   for (const button of els.meatResults.querySelectorAll(".search-result")) {
     button.addEventListener("click", () => {
       const food = meatFoods.find((item) => String(item.id) === button.dataset.id);
-      if (food) showMeatFood(food);
+      if (food) {
+        showMeatFood(food);
+        els.meatResults.innerHTML = "";
+      }
     });
   }
 }
@@ -704,4 +708,9 @@ els.galleryBtn.addEventListener("click", () => scanSource(CameraSource.Photos));
 els.meatSearchInput.addEventListener("input", updateMeatSearch);
 els.meatSearchInput.addEventListener("focus", () => {
   loadMeatFoods().catch(() => {});
+});
+els.meatSearchClear.addEventListener("click", () => {
+  els.meatSearchInput.value = "";
+  els.meatResults.innerHTML = "";
+  els.meatSearchInput.focus();
 });

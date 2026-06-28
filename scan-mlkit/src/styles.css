@@ -79,12 +79,18 @@ h1 {
   margin-bottom: 14px;
 }
 
+.search-field {
+  position: relative;
+  display: grid;
+  align-items: center;
+}
+
 .search-input {
   width: 100%;
   min-height: 48px;
   border: 1px solid #d8d1c4;
   border-radius: 8px;
-  padding: 0 14px;
+  padding: 0 58px 0 14px;
   background: #fffdf8;
   color: #101820;
   font: inherit;
@@ -94,6 +100,33 @@ h1 {
 .search-input:focus {
   outline: 2px solid rgba(15, 116, 100, 0.24);
   border-color: #0f7464;
+}
+
+.search-clear {
+  position: absolute;
+  right: 4px;
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  border: 0;
+  border-radius: 8px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  color: #68717b;
+}
+
+.search-clear:focus,
+.search-clear:hover {
+  color: #101820;
+  outline: 2px solid rgba(15, 116, 100, 0.24);
+  outline-offset: -4px;
+}
+
+.search-clear svg {
+  width: 26px;
+  height: 26px;
 }
 
 .search-results {
