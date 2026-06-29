@@ -1,0 +1,120 @@
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    min-height: 100%;
+}
+
+body {
+    background: #000000;
+    color: #d7e5ff;
+    font: 11px/1.2 "MS Sans Serif", "Microsoft Sans Serif", Tahoma, sans-serif;
+    overflow: hidden;
+}
+
+.embed-page {
+    height: 383px;
+    min-height: 383px;
+    width: 590px;
+}
+
+.orbit-toy {
+    background: #000000;
+    height: 383px;
+    overflow: hidden;
+    position: relative;
+    width: 590px;
+}
+
+#orbit-canvas {
+    cursor: crosshair;
+    display: block;
+    height: 383px;
+    image-rendering: pixelated;
+    inset: 0;
+    position: absolute;
+    width: 590px;
+}
+
+.orbit-controls {
+    color: #d7e5ff;
+    left: 16px;
+    position: absolute;
+    top: 32px;
+    width: 100px;
+    z-index: 2;
+}
+
+.orbit-button {
+    border: 0;
+    border-radius: 0;
+    display: block;
+    font: inherit;
+    height: 20px;
+    line-height: 18px;
+    margin: 0 0 3px;
+    padding: 0;
+    text-align: center;
+    width: 86px;
+}
+
+.orbit-button.primary {
+    background: #ffd653;
+    color: #000000;
+}
+
+.orbit-button.secondary {
+    background: #294783;
+    color: #dbe4ff;
+}
+
+.orbit-check {
+    align-items: center;
+    display: flex;
+    gap: 4px;
+    height: 18px;
+    white-space: nowrap;
+}
+
+.orbit-check input {
+    accent-color: #3c6599;
+    height: 12px;
+    margin: 0;
+    width: 12px;
+}
+
+.orbit-help {
+    color: #c6c6c6;
+    display: none;
+    left: 16px;
+    line-height: 14px;
+    margin: 0;
+    position: absolute;
+    top: 126px;
+    width: 178px;
+    z-index: 2;
+}
+
+.orbit-help.is-hidden {
+    display: none;
+}
+
+.orbit-status {
+    color: #ff3153;
+    font-weight: 700;
+    left: 210px;
+    letter-spacing: 2px;
+    position: absolute;
+    text-align: center;
+    text-transform: uppercase;
+    top: 32px;
+    width: 210px;
+    z-index: 2;
+}
+
+.orbit-status.is-hidden {
+    display: none;
+}

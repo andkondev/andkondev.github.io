@@ -27,6 +27,7 @@
             --element-spacing: 8px;
             --desktop-inline-gutter: 18px;
             --desktop-block-gutter: 18px;
+            --orbit-scale: 1;
             --viewport-bottom-inset: env(safe-area-inset-bottom, 0px);
             --border-raised-outer:
                 inset -1px -1px var(--window-frame),
@@ -72,6 +73,12 @@
             text-rendering: optimizeLegibility;
         }
 
+        .pixel-stage {
+            background: var(--desktop);
+            min-height: 100vh;
+            min-height: 100dvh;
+        }
+
         button,
         a,
         input {
@@ -88,6 +95,11 @@
                 var(--desktop-block-gutter)
                 var(--desktop-inline-gutter)
                 calc(var(--taskbar-height) + var(--desktop-block-gutter) + var(--viewport-bottom-inset));
+        }
+
+        .pixel-stage .desktop {
+            min-height: 100vh;
+            min-height: 100dvh;
         }
 
         .desktop-icons {
@@ -232,6 +244,7 @@
         }
 
         .title-button {
+            --title-glyph: #000000;
             appearance: none;
             background: var(--surface);
             border: none;
@@ -245,10 +258,9 @@
             position: relative;
             width: 16px;
             cursor: default;
-            background-repeat: no-repeat;
         }
 
-        .title-button:active {
+        .title-button:active:not(:disabled) {
             box-shadow: var(--border-sunken-outer), var(--border-sunken-inner);
         }
 
@@ -256,25 +268,85 @@
             outline: none;
         }
 
-        .title-button.minimize {
-            background-image: url("assets/title-minimize.svg");
-            background-position: bottom 3px left 4px;
+        .title-button:disabled {
+            --title-glyph: var(--shadow);
         }
 
-        .title-button.maximize {
-            background-image: url("assets/title-maximize.svg");
-            background-position: top 2px left 3px;
+        .title-button::before,
+        .title-button::after {
+            content: "";
+            pointer-events: none;
+            position: absolute;
         }
 
-        .window.is-maximized .title-button.maximize {
-            background-image: url("assets/title-restore.svg");
-            background-position: top 2px left 3px;
+        .title-button:active:not(:disabled)::before,
+        .title-button:active:not(:disabled)::after {
+            transform: translate(1px, 1px);
+        }
+
+        .title-button.minimize::before {
+            background: var(--title-glyph);
+            bottom: 3px;
+            height: 2px;
+            left: 4px;
+            width: 6px;
+        }
+
+        .title-button.maximize::before {
+            border: 1px solid var(--title-glyph);
+            border-top-width: 2px;
+            box-sizing: border-box;
+            height: 9px;
+            left: 3px;
+            top: 2px;
+            width: 9px;
+        }
+
+        .window.is-maximized .title-button.maximize::before {
+            height: 7px;
+            left: 5px;
+            top: 2px;
+            width: 7px;
+        }
+
+        .window.is-maximized .title-button.maximize::after {
+            background: var(--surface);
+            border: 1px solid var(--title-glyph);
+            border-top-width: 2px;
+            box-sizing: border-box;
+            height: 7px;
+            left: 3px;
+            top: 5px;
+            width: 7px;
         }
 
         .title-button.close {
-            background-image: url("assets/title-close.svg");
-            background-position: top 3px left 4px;
             margin-left: 2px;
+        }
+
+        .title-button.close::before,
+        .title-button.close::after {
+            background: var(--title-glyph);
+            height: 1px;
+            left: 4px;
+            top: 6px;
+            width: 8px;
+        }
+
+        .title-button.close::before {
+            transform: rotate(45deg);
+        }
+
+        .title-button.close::after {
+            transform: rotate(-45deg);
+        }
+
+        .title-button.close:active::before {
+            transform: translate(1px, 1px) rotate(45deg);
+        }
+
+        .title-button.close:active::after {
+            transform: translate(1px, 1px) rotate(-45deg);
         }
 
         .window-body {
@@ -446,6 +518,30 @@
             height: 32px;
         }
 
+        .orbit-window {
+            width: calc((590px * var(--orbit-scale)) + 6px);
+        }
+
+        .orbit-window .window-body {
+            background: #000000;
+            flex: 0 0 auto;
+            height: calc(383px * var(--orbit-scale));
+            margin: 0;
+            overflow: hidden;
+            width: calc(590px * var(--orbit-scale));
+        }
+
+        .orbit-frame {
+            background: #000000;
+            border: 0;
+            display: block;
+            flex: 0 0 383px;
+            height: 383px;
+            transform: scale(var(--orbit-scale));
+            transform-origin: top left;
+            width: 590px;
+        }
+
         .license-plate-icon {
             height: auto;
             max-width: 32px;
@@ -487,59 +583,103 @@
     </style>
 </head>
 <body>
-    <main class="desktop">
-        <section aria-label="Desktop shortcuts" class="desktop-icons" id="desktop-icons"></section>
+    <div class="pixel-stage">
+        <main class="desktop">
+            <section aria-label="Desktop shortcuts" class="desktop-icons" id="desktop-icons"></section>
 
-        <section aria-label="Welcome window" class="window">
-            <div class="title-bar">
-                <div class="title-bar-left">
-                    <img alt="" class="icon-asset desktop-window-icon" height="16" src="assets/welcome-window.svg" width="16">
-                    <span class="title-bar-text">Welcome to andkon.dev</span>
+            <section aria-label="Welcome window" class="window">
+                <div class="title-bar">
+                    <div class="title-bar-left">
+                        <img alt="" class="icon-asset desktop-window-icon" height="16" src="assets/welcome-window.svg" width="16">
+                        <span class="title-bar-text">Welcome to andkon.dev</span>
+                    </div>
+                    <div class="title-bar-controls">
+                        <button aria-label="Minimize" class="title-button minimize" type="button"></button>
+                        <button aria-label="Maximize" class="title-button maximize" type="button"></button>
+                        <button aria-label="Close" class="title-button close" type="button"></button>
+                    </div>
                 </div>
-                <div class="title-bar-controls">
-                    <button aria-label="Minimize" class="title-button minimize" type="button"></button>
-                    <button aria-label="Maximize" class="title-button maximize" type="button"></button>
-                    <button aria-label="Close" class="title-button close" type="button"></button>
+                <div class="window-body">
+                    <p>This is a first-pass Windows 98-style desktop for the portfolio homepage.</p>
+                    <ul>
+                        <li>Double-click an icon to open a project.</li>
+                        <li>Press <strong>Enter</strong> on a selected icon to launch it.</li>
+                        <li>The Start button is decorative for now.</li>
+                    </ul>
+                    <div class="window-actions" id="window-actions"></div>
                 </div>
+            </section>
+
+            <section aria-label="Orbit window" class="window orbit-window" hidden>
+                <div class="title-bar">
+                    <div class="title-bar-left">
+                        <img alt="" class="icon-asset desktop-window-icon" height="16" src="assets/orbit-icon.png?v=20260629-icon2" width="16">
+                        <span class="title-bar-text">Orbit</span>
+                    </div>
+                    <div class="title-bar-controls">
+                        <button aria-label="Minimize" class="title-button minimize" type="button"></button>
+                        <button aria-label="Maximize" class="title-button maximize" type="button"></button>
+                        <button aria-label="Close" class="title-button close" type="button"></button>
+                    </div>
+                </div>
+                <div class="window-body">
+                    <iframe class="orbit-frame" src="orbit/embed.html?v=20260629-original-assets" title="Orbit"></iframe>
+                </div>
+            </section>
+        </main>
+
+        <footer class="taskbar">
+            <div aria-hidden="true" class="start-button">
+                <img alt="" class="icon-asset start-icon" height="16" src="assets/start.svg" width="16">
+                <span>Start</span>
             </div>
-            <div class="window-body">
-                <p>This is a first-pass Windows 98-style desktop for the portfolio homepage.</p>
-                <ul>
-                    <li>Double-click an icon to open a project.</li>
-                    <li>Press <strong>Enter</strong> on a selected icon to launch it.</li>
-                    <li>The Start button is decorative for now.</li>
-                </ul>
-                <div class="window-actions" id="window-actions"></div>
-            </div>
-        </section>
-    </main>
 
-    <footer class="taskbar">
-        <div aria-hidden="true" class="start-button">
-            <img alt="" class="icon-asset start-icon" height="16" src="assets/start.svg" width="16">
-            <span>Start</span>
-        </div>
+            <button aria-label="Welcome to andkon.dev window" class="task-button active" type="button">
+                <span class="task-button-text">Welcome to andkon.dev</span>
+            </button>
 
-        <button aria-label="Welcome to andkon.dev window" class="task-button active" type="button">
-            <span class="task-button-text">Welcome to andkon.dev</span>
-        </button>
+            <button aria-label="Orbit window" class="task-button" type="button" hidden>
+                <span class="task-button-text">Orbit</span>
+            </button>
 
-        <div class="taskbar-spacer"></div>
-        <div aria-label="Current time" class="tray-clock" id="clock">12:00 PM</div>
-    </footer>
+            <div class="taskbar-spacer"></div>
+            <div aria-label="Current time" class="tray-clock" id="clock">12:00 PM</div>
+        </footer>
+    </div>
 
     <script>
         (function () {
+            const root = document.documentElement;
             const desktop = document.querySelector(".desktop");
             const desktopIcons = document.getElementById("desktop-icons");
             const windowActions = document.getElementById("window-actions");
             const welcomeWindow = document.querySelector(".window");
+            const orbitWindow = document.querySelector(".orbit-window");
             const taskbar = document.querySelector(".taskbar");
             const taskButton = document.querySelector(".task-button");
+            const orbitTaskButton = document.querySelectorAll(".task-button")[1];
             const clock = document.getElementById("clock");
             const iconLaneGap = 24;
             const minimumVisibleWindow = 120;
             const startupWindowTopOffset = 38;
+            let topWindowZIndex = 3;
+
+            function getAutoPixelScale() {
+                const dpr = window.devicePixelRatio || 1;
+                const nearestInteger = Math.round(dpr);
+
+                if (dpr > 1 && Math.abs(dpr - nearestInteger) > 0.001) {
+                    return 1 / dpr;
+                }
+
+                return 1;
+            }
+
+            function applyPixelScale() {
+                root.style.setProperty("--orbit-scale", getAutoPixelScale().toFixed(4));
+            }
+
+            applyPixelScale();
             const githubShortcut = {
                 id: "github-profile",
                 label: "/andkondev",
@@ -593,6 +733,19 @@
                         top: 270
                     },
                     url: "https://github.com/andkondev/draggable-multirow-taskbar-systray-windows-11/tree/main#readme"
+                },
+                {
+                    id: "orbit",
+                    icon: "assets/orbit-icon.png?v=20260629-icon2",
+                    imageClass: "pixel-icon",
+                    label: "Orbit",
+                    launchMode: "window",
+                    openInNewTab: false,
+                    position: {
+                        left: 0,
+                        top: 360
+                    },
+                    windowId: "orbit"
                 }
             ];
             let icons = [];
@@ -607,6 +760,10 @@
                 button.dataset.projectId = project.id;
                 button.dataset.target = project.url;
                 button.dataset.targetBlank = String(project.openInNewTab);
+                button.dataset.launchMode = project.launchMode || "link";
+                if (project.windowId) {
+                    button.dataset.windowId = project.windowId;
+                }
                 button.style.left = project.position.left + "px";
                 button.style.top = project.position.top + "px";
                 button.type = "button";
@@ -691,7 +848,9 @@
 
                 projects.forEach(function (project) {
                     desktopIconFragment.appendChild(createProjectIcon(project));
-                    windowActionFragment.appendChild(createWindowAction(project));
+                    if (project.launchMode !== "window") {
+                        windowActionFragment.appendChild(createWindowAction(project));
+                    }
                 });
                 desktopIconFragment.appendChild(createGithubShortcut());
 
@@ -844,9 +1003,44 @@
                 icons.forEach((item) => item.classList.toggle("selected", item === icon));
             }
 
+            const windowControllers = {};
+            const managedWindows = [];
+
+            function activateTopVisibleWindow() {
+                const topVisibleWindow = managedWindows.reduce(function (topWindow, entry) {
+                    const zIndex = Number.parseInt(window.getComputedStyle(entry.windowEl).zIndex, 10) || 0;
+
+                    if (!entry.isVisible()) {
+                        return topWindow;
+                    }
+
+                    if (!topWindow || zIndex > topWindow.zIndex) {
+                        return {
+                            entry: entry,
+                            zIndex: zIndex
+                        };
+                    }
+
+                    return topWindow;
+                }, null);
+
+                if (topVisibleWindow) {
+                    topVisibleWindow.entry.bringToFront();
+                }
+            }
+
             function openIcon(icon) {
+                const launchMode = icon.dataset.launchMode;
                 const target = icon.dataset.target;
                 const openInNewTab = icon.dataset.targetBlank === "true";
+
+                if (launchMode === "window") {
+                    const controller = windowControllers[icon.dataset.windowId];
+                    if (controller) {
+                        controller.openWindow();
+                    }
+                    return;
+                }
 
                 if (!target) {
                     return;
@@ -934,8 +1128,12 @@
                 const minimizeButtonEl = windowEl.querySelector(".title-button.minimize");
                 const maximizeButtonEl = windowEl.querySelector(".title-button.maximize");
                 const closeButtonEl = windowEl.querySelector(".title-button.close");
+                const canMaximize = options.canMaximize !== false;
+                windowEl.hidden = false;
+                maximizeButtonEl.disabled = !canMaximize;
+                maximizeButtonEl.setAttribute("aria-disabled", String(!canMaximize));
                 const state = {
-                    closed: false,
+                    closed: Boolean(options.initiallyClosed),
                     maximized: false,
                     minimized: false,
                     restoreLeft: 0,
@@ -943,6 +1141,18 @@
                     restoreWidth: windowEl.offsetWidth,
                     userPositioned: false
                 };
+
+                function bringToFront() {
+                    if (state.closed || state.minimized) {
+                        return;
+                    }
+
+                    topWindowZIndex += 1;
+                    windowEl.style.zIndex = String(topWindowZIndex);
+                    document.querySelectorAll(".task-button").forEach(function (button) {
+                        button.classList.toggle("active", button === taskButtonEl);
+                    });
+                }
 
                 function rememberPlacement() {
                     if (state.maximized || windowEl.hidden) {
@@ -978,10 +1188,15 @@
                     const bounds = getWindowBounds(windowEl, {
                         reserveIconLane: true
                     });
-                    const startupTop = clamp(getDesktopTopInset() + startupWindowTopOffset, bounds.minTop, bounds.maxTop);
+                    const startupLeft = clamp(bounds.minLeft + (options.startupOffsetX || 0), bounds.minLeft, bounds.maxLeft);
+                    const startupTop = clamp(
+                        getDesktopTopInset() + startupWindowTopOffset + (options.startupOffsetY || 0),
+                        bounds.minTop,
+                        bounds.maxTop
+                    );
 
                     windowEl.style.right = "auto";
-                    windowEl.style.left = bounds.minLeft + "px";
+                    windowEl.style.left = startupLeft + "px";
                     windowEl.style.top = startupTop + "px";
                     rememberPlacement();
                 }
@@ -1012,9 +1227,14 @@
 
                     windowEl.hidden = state.closed || state.minimized;
                     taskButtonEl.hidden = state.closed;
-                    taskButtonEl.classList.toggle("active", !state.closed && !state.minimized);
+                    if (state.closed || state.minimized) {
+                        taskButtonEl.classList.remove("active");
+                    }
                     taskButtonEl.setAttribute("aria-pressed", String(!state.closed && !state.minimized));
-                    maximizeButtonEl.setAttribute("aria-label", state.maximized ? "Restore" : "Maximize");
+                    maximizeButtonEl.setAttribute(
+                        "aria-label",
+                        canMaximize ? state.maximized ? "Restore" : "Maximize" : "Maximize unavailable"
+                    );
                 }
 
                 function minimizeWindow() {
@@ -1024,6 +1244,7 @@
 
                     state.minimized = true;
                     syncState();
+                    activateTopVisibleWindow();
                 }
 
                 function restoreWindow() {
@@ -1033,10 +1254,11 @@
 
                     state.minimized = false;
                     syncState();
+                    bringToFront();
                 }
 
                 function toggleMaximizeWindow() {
-                    if (state.closed) {
+                    if (state.closed || !canMaximize) {
                         return;
                     }
 
@@ -1050,12 +1272,21 @@
 
                     state.maximized = !state.maximized;
                     syncState();
+                    bringToFront();
                 }
 
                 function closeWindow() {
                     state.closed = true;
                     state.minimized = false;
                     syncState();
+                    activateTopVisibleWindow();
+                }
+
+                function openWindow() {
+                    state.closed = false;
+                    state.minimized = false;
+                    syncState();
+                    bringToFront();
                 }
 
                 function toggleTaskButtonWindow() {
@@ -1069,6 +1300,18 @@
                         minimizeWindow();
                     }
                 }
+
+                managedWindows.push({
+                    bringToFront: bringToFront,
+                    isVisible: function () {
+                        return !state.closed && !state.minimized;
+                    },
+                    windowEl: windowEl
+                });
+
+                windowEl.addEventListener("pointerdown", function () {
+                    bringToFront();
+                });
 
                 makeDraggable({
                     element: windowEl,
@@ -1108,8 +1351,16 @@
 
                 positionAtStartup();
                 syncState();
+                if (!state.closed && !state.minimized) {
+                    bringToFront();
+                }
 
                 return {
+                    openWindow: openWindow,
+                    bringToFront: bringToFront,
+                    isVisible: function () {
+                        return !state.closed && !state.minimized;
+                    },
                     handleResize: function () {
                         if (state.closed) {
                             return;
@@ -1128,6 +1379,29 @@
                 taskButtonEl: taskButton,
                 windowEl: welcomeWindow
             });
+            const orbitWindowController = setupWindow({
+                canMaximize: false,
+                initiallyClosed: true,
+                startupOffsetX: 46,
+                startupOffsetY: 46,
+                taskButtonEl: orbitTaskButton,
+                windowEl: orbitWindow
+            });
+            windowControllers.orbit = orbitWindowController;
+
+            const orbitFrame = orbitWindow.querySelector(".orbit-frame");
+            orbitFrame.addEventListener("focus", function () {
+                orbitWindowController.bringToFront();
+            });
+            orbitFrame.addEventListener("load", function () {
+                try {
+                    orbitFrame.contentWindow.document.addEventListener("pointerdown", function () {
+                        orbitWindowController.bringToFront();
+                    });
+                } catch (_) {
+                    // Same-origin iframe today; if that changes, title-bar clicks still bring the window forward.
+                }
+            });
 
             function updateClock() {
                 const now = new Date();
@@ -1140,7 +1414,9 @@
             updateClock();
             window.setInterval(updateClock, 30000);
             window.addEventListener("resize", function () {
+                applyPixelScale();
                 welcomeWindowController.handleResize();
+                orbitWindowController.handleResize();
             });
         }());
     </script>

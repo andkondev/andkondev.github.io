@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orbit Toy</title>
+    <link rel="stylesheet" href="orbit.css?v=20260629-original-assets">
+</head>
+<body class="embed-page">
+    <main class="orbit-toy" aria-label="Orbit toy">
+        <canvas id="orbit-canvas" width="590" height="383" aria-label="Orbit simulation"></canvas>
+
+        <section class="orbit-controls" aria-label="Orbit controls">
+            <button id="run-toggle" class="orbit-button primary" type="button">Start</button>
+            <button id="reset-button" class="orbit-button secondary" type="button">Reset</button>
+            <label class="orbit-check">
+                <input id="trail-toggle" type="checkbox" checked>
+                <span>Leave dot trail</span>
+            </label>
+            <label class="orbit-check">
+                <input id="type-toggle" type="checkbox" checked>
+                <span>Show orbit type</span>
+            </label>
+        </section>
+
+        <p id="orbit-help" class="orbit-help">
+            To create your own orbit, first drag the small body to any location on the screen.
+            Then set the initial velocity by dragging the arrow. The arrow's length and direction
+            determine the speed and direction of the small body.
+        </p>
+
+        <div id="orbit-status" class="orbit-status" aria-live="polite">HIGHLY ELLIPTICAL ORBIT</div>
+    </main>
+
+    <script src="orbit.js?v=20260629-original-assets"></script>
+</body>
+</html>
