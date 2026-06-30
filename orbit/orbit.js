@@ -3,12 +3,13 @@
 
     const W = 590;
     const H = 383;
-    const ASSET_VERSION = "20260629-mobile-collision-fix2";
+    const ASSET_VERSION = "20260629-touch-drag-fix";
     const TICK_MS = 50;
     const GRAVITY = 12000;
     const COLLISION_DISTANCE = 36;
     const MIN_DRAG_DISTANCE = 39;
     const BODY_HIT_DISTANCE = 15;
+    const BODY_TOUCH_HIT_DISTANCE = 28;
     const EXPLOSION_FRAMES = 6;
     const EXPLOSION_FRAME_MS = 100;
 
@@ -405,8 +406,12 @@
             return;
         }
 
+        event.preventDefault();
         const point = eventPoint(event);
-        dragMode = distance(point.x, point.y, body.x, body.y) < BODY_HIT_DISTANCE ? "body" : "vector";
+        const hitDistance = event.pointerType === "touch" || event.pointerType === "pen"
+            ? BODY_TOUCH_HIT_DISTANCE
+            : BODY_HIT_DISTANCE;
+        dragMode = distance(point.x, point.y, body.x, body.y) < hitDistance ? "body" : "vector";
 
         if (dragMode === "body") {
             const clamped = clampBody(point.x, point.y);
@@ -426,6 +431,7 @@
             return;
         }
 
+        event.preventDefault();
         const point = eventPoint(event);
         if (dragMode === "body") {
             const clamped = clampBody(point.x, point.y);
