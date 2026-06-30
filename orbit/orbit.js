@@ -3,7 +3,7 @@
 
     const W = 590;
     const H = 383;
-    const ASSET_VERSION = "20260629-original-assets";
+    const ASSET_VERSION = "20260629-mobile-collision-fix2";
     const TICK_MS = 50;
     const GRAVITY = 12000;
     const COLLISION_DISTANCE = 36;
@@ -170,12 +170,23 @@
         return "HIGHLY ELLIPTICAL ORBIT";
     }
 
-    function addTrailDot() {
-        if (!trailToggle.checked || body.x < 0 || body.x >= W || body.y < 0 || body.y >= H) {
+    function isInsideCollisionZone(x, y) {
+        return distance(x, y, planet.x, planet.y) <= COLLISION_DISTANCE;
+    }
+
+    function addTrailDot(x, y) {
+        const dotX = typeof x === "number" ? x : body.x;
+        const dotY = typeof y === "number" ? y : body.y;
+
+        if (!trailToggle.checked || dotX < 0 || dotX >= W || dotY < 0 || dotY >= H) {
             return;
         }
 
-        trail.push({ x: Math.round(body.x), y: Math.round(body.y) });
+        if (isInsideCollisionZone(dotX, dotY)) {
+            return;
+        }
+
+        trail.push({ x: Math.round(dotX), y: Math.round(dotY) });
         if (trail.length > 3000) {
             trail.shift();
         }
@@ -212,6 +223,9 @@
         running = true;
         collisionPoint = point;
         collisionStartedAt = performance.now();
+        trail = trail.filter(function (dot) {
+            return !isInsideCollisionZone(dot.x, dot.y);
+        });
         body.x = point.x;
         body.y = point.y;
         body.vx = 0;
@@ -241,13 +255,18 @@
 
         body.vx += (dx / d) * gravity;
         body.vy += (dy / d) * gravity;
-        body.x += body.vx;
-        body.y += body.vy;
-        addTrailDot();
+        const next = {
+            x: body.x + body.vx,
+            y: body.y + body.vy
+        };
 
-        const impact = findCollisionPoint(previous, body);
-        if (impact || distance(body.x, body.y, planet.x, planet.y) <= COLLISION_DISTANCE) {
-            triggerCollision(impact || { x: body.x, y: body.y });
+        const impact = findCollisionPoint(previous, next);
+        if (impact || isInsideCollisionZone(next.x, next.y)) {
+            triggerCollision(impact || next);
+        } else {
+            body.x = next.x;
+            body.y = next.y;
+            addTrailDot();
         }
 
         dirty = true;
@@ -346,7 +365,9 @@
 
         ctx.fillStyle = "#ffffff";
         for (let i = 0; i < trail.length; i += 1) {
-            ctx.fillRect(trail[i].x, trail[i].y, 1, 1);
+            if (!isInsideCollisionZone(trail[i].x, trail[i].y)) {
+                ctx.fillRect(trail[i].x, trail[i].y, 1, 1);
+            }
         }
 
         drawArrow();
@@ -354,6 +375,7 @@
         drawExplosion(now);
 
         status.textContent = classifyOrbit();
+        publishDebugState();
     }
 
     function frame(now) {
@@ -447,17 +469,32 @@
         dirty = true;
     });
 
+    function getDebugState() {
+        return {
+            body: { x: body.x, y: body.y, vx: body.vx, vy: body.vy },
+            running: running,
+            collision: collision,
+            collisionPoint: { x: collisionPoint.x, y: collisionPoint.y },
+            trailLength: trail.length,
+            trailInsideCollisionZone: trail.filter(function (dot) {
+                return isInsideCollisionZone(dot.x, dot.y);
+            }).length,
+            status: classifyOrbit(),
+            ticks: trail.length
+        };
+    }
+
+    function publishDebugState() {
+        const state = getDebugState();
+
+        document.documentElement.dataset.orbitCollision = String(state.collision);
+        document.documentElement.dataset.orbitTrailInsideCollisionZone = String(state.trailInsideCollisionZone);
+        document.documentElement.dataset.orbitTrailLength = String(state.trailLength);
+        document.documentElement.dataset.orbitStatus = state.status;
+    }
+
     window.__orbitToyDebug = {
-        getState: function () {
-            return {
-                body: { x: body.x, y: body.y, vx: body.vx, vy: body.vy },
-                running: running,
-                collision: collision,
-                trailLength: trail.length,
-                status: classifyOrbit(),
-                ticks: trail.length
-            };
-        }
+        getState: getDebugState
     };
 
     resetOrbit();

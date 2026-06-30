@@ -519,6 +519,7 @@
         }
 
         .orbit-window {
+            min-width: calc((590px * var(--orbit-scale)) + 6px);
             width: calc((590px * var(--orbit-scale)) + 6px);
         }
 
@@ -623,7 +624,7 @@
                     </div>
                 </div>
                 <div class="window-body">
-                    <iframe class="orbit-frame" src="orbit/embed.html?v=20260629-original-assets" title="Orbit"></iframe>
+                    <iframe class="orbit-frame" src="orbit/embed.html?v=20260629-mobile-collision-fix2" title="Orbit"></iframe>
                 </div>
             </section>
         </main>
@@ -664,7 +665,16 @@
             const startupWindowTopOffset = 38;
             let topWindowZIndex = 3;
 
+            function isNarrowViewport() {
+                return window.matchMedia("(max-width: 700px)").matches;
+            }
+
             function getAutoPixelScale() {
+                if (isNarrowViewport()) {
+                    const bodyWidth = Math.max(240, window.innerWidth - 30);
+                    return Math.min(1, bodyWidth / 590);
+                }
+
                 const dpr = window.devicePixelRatio || 1;
                 const nearestInteger = Math.round(dpr);
 
@@ -677,6 +687,14 @@
 
             function applyPixelScale() {
                 root.style.setProperty("--orbit-scale", getAutoPixelScale().toFixed(4));
+            }
+
+            function getOrbitScale() {
+                return Number.parseFloat(window.getComputedStyle(root).getPropertyValue("--orbit-scale")) || 1;
+            }
+
+            function getOrbitWindowWidth() {
+                return Math.ceil(590 * getOrbitScale() + 6);
             }
 
             applyPixelScale();
@@ -1174,7 +1192,12 @@
                 }
 
                 function applyRestoredBounds() {
-                    const restoredWidth = Math.min(state.restoreWidth, Math.max(280, desktop.clientWidth));
+                    const targetRestoreWidth = typeof options.getRestoredWidth === "function"
+                        ? options.getRestoredWidth()
+                        : state.restoreWidth;
+                    const restoredWidth = typeof options.getRestoredWidth === "function"
+                        ? Math.min(targetRestoreWidth, desktop.clientWidth)
+                        : Math.min(targetRestoreWidth, Math.max(280, desktop.clientWidth));
 
                     windowEl.classList.remove("is-maximized");
                     windowEl.style.right = "auto";
@@ -1184,11 +1207,25 @@
                     windowEl.style.height = "auto";
                 }
 
+                function shouldKeepFullyVisible() {
+                    return typeof options.keepFullyVisibleOnStartup === "function" && options.keepFullyVisibleOnStartup();
+                }
+
                 function positionAtStartup() {
+                    const reserveIconLane = typeof options.reserveIconLaneOnStartup === "function"
+                        ? options.reserveIconLaneOnStartup()
+                        : options.reserveIconLaneOnStartup !== false;
                     const bounds = getWindowBounds(windowEl, {
-                        reserveIconLane: true
+                        reserveIconLane: reserveIconLane
                     });
-                    const startupLeft = clamp(bounds.minLeft + (options.startupOffsetX || 0), bounds.minLeft, bounds.maxLeft);
+                    const startupOffsetX = typeof options.startupOffsetX === "function"
+                        ? options.startupOffsetX()
+                        : options.startupOffsetX || 0;
+                    const minStartupLeft = shouldKeepFullyVisible() ? 0 : bounds.minLeft;
+                    const maxStartupLeft = shouldKeepFullyVisible()
+                        ? Math.max(0, desktop.clientWidth - windowEl.offsetWidth)
+                        : bounds.maxLeft;
+                    const startupLeft = clamp(minStartupLeft + startupOffsetX, minStartupLeft, maxStartupLeft);
                     const startupTop = clamp(
                         getDesktopTopInset() + startupWindowTopOffset + (options.startupOffsetY || 0),
                         bounds.minTop,
@@ -1206,11 +1243,20 @@
                         return;
                     }
 
+                    const reserveIconLane = typeof options.reserveIconLaneOnStartup === "function"
+                        ? options.reserveIconLaneOnStartup()
+                        : !state.userPositioned;
                     const bounds = getWindowBounds(windowEl, {
-                        reserveIconLane: !state.userPositioned
+                        reserveIconLane: reserveIconLane && !state.userPositioned
                     });
+                    const minLeft = shouldKeepFullyVisible() && !state.userPositioned
+                        ? 0
+                        : bounds.minLeft;
+                    const maxLeft = shouldKeepFullyVisible() && !state.userPositioned
+                        ? Math.max(0, desktop.clientWidth - windowEl.offsetWidth)
+                        : bounds.maxLeft;
 
-                    windowEl.style.left = clamp(windowEl.offsetLeft, bounds.minLeft, bounds.maxLeft) + "px";
+                    windowEl.style.left = clamp(windowEl.offsetLeft, minLeft, maxLeft) + "px";
                     windowEl.style.top = clamp(windowEl.offsetTop, bounds.minTop, bounds.maxTop) + "px";
                     rememberPlacement();
                 }
@@ -1369,6 +1415,7 @@
                         if (state.maximized && !state.minimized) {
                             applyMaximizedBounds();
                         } else if (!state.minimized) {
+                            applyRestoredBounds();
                             clampPlacement();
                         }
                     }
@@ -1381,8 +1428,15 @@
             });
             const orbitWindowController = setupWindow({
                 canMaximize: false,
+                getRestoredWidth: getOrbitWindowWidth,
                 initiallyClosed: true,
-                startupOffsetX: 46,
+                keepFullyVisibleOnStartup: isNarrowViewport,
+                reserveIconLaneOnStartup: function () {
+                    return !isNarrowViewport();
+                },
+                startupOffsetX: function () {
+                    return isNarrowViewport() ? 12 : 46;
+                },
                 startupOffsetY: 46,
                 taskButtonEl: orbitTaskButton,
                 windowEl: orbitWindow
