@@ -1,0 +1,926 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Protein Scan Current App Mockup</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f4f1ea;
+        --surface: #fffdf8;
+        --surface-2: #f8f4ec;
+        --ink: #101820;
+        --muted: #66717b;
+        --line: #d8d1c4;
+        --primary: #0f7464;
+        --primary-dark: #0b5f54;
+        --blue: #245c92;
+        --warn: #a64620;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: var(--bg);
+        color: var(--ink);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 280px),
+          var(--bg);
+      }
+
+      button,
+      input,
+      select {
+        font: inherit;
+      }
+
+      button {
+        min-height: 48px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 0 12px;
+        background: var(--surface);
+        color: var(--ink);
+        font-weight: 760;
+      }
+
+      button.primary {
+        border-color: var(--primary);
+        background: var(--primary);
+        color: #fff;
+      }
+
+      button .icon {
+        width: 20px;
+        height: 20px;
+        flex: 0 0 auto;
+      }
+
+      .app {
+        width: min(980px, 100%);
+        margin: 0 auto;
+        padding: 16px;
+      }
+
+      .topbar {
+        position: relative;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      h1 {
+        margin: 0;
+        min-width: 0;
+        font-size: 28px;
+        letter-spacing: 0;
+      }
+
+      .icon {
+        width: 19px;
+        height: 19px;
+        flex: 0 0 auto;
+      }
+
+      .corner-action {
+        position: relative;
+        z-index: 20;
+        display: grid;
+        justify-items: end;
+        flex: 0 0 auto;
+      }
+
+      .quick-action {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 42px;
+        min-width: 156px;
+        border: 1px solid var(--primary);
+        border-radius: 8px;
+        overflow: hidden;
+        background: var(--primary);
+        box-shadow: 0 12px 28px rgba(16, 24, 32, 0.12);
+      }
+
+      .corner-action.search-open .quick-action {
+        width: min(360px, calc(100vw - 32px));
+        border-color: var(--line);
+        background: var(--surface);
+      }
+
+      .default-action,
+      .action-menu-toggle {
+        min-height: 52px;
+        border: 0;
+        border-radius: 0;
+        padding: 0;
+        color: #fff;
+      }
+
+      .default-action {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 0 14px;
+        background: var(--primary);
+        line-height: 1.05;
+        transition: background 140ms ease, transform 140ms ease;
+      }
+
+      #activeActionLabel {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .inline-search {
+        position: relative;
+        display: none;
+        align-items: center;
+        min-width: 0;
+        background: var(--surface);
+      }
+
+      .corner-action.search-open .default-action {
+        display: none;
+      }
+
+      .corner-action.search-open .inline-search {
+        display: grid;
+      }
+
+      .inline-search-input {
+        width: 100%;
+        min-height: 52px;
+        border: 0;
+        border-radius: 0;
+        padding: 0 50px 0 14px;
+        background: var(--surface);
+        color: var(--ink);
+        font-weight: 650;
+      }
+
+      .inline-search-input:focus {
+        outline: 0;
+        box-shadow: inset 0 0 0 2px rgba(15, 116, 100, 0.24);
+      }
+
+      .inline-search-close {
+        position: absolute;
+        right: 4px;
+        width: 44px;
+        height: 44px;
+        min-height: 44px;
+        border: 0;
+        border-radius: 8px;
+        padding: 0;
+        display: grid;
+        place-items: center;
+        background: transparent;
+        color: var(--muted);
+      }
+
+      .inline-search-close svg {
+        width: 26px;
+        height: 26px;
+      }
+
+      .default-action.is-running {
+        background: var(--primary-dark);
+        transform: translateY(1px);
+      }
+
+      .active-action-icon {
+        display: grid;
+        place-items: center;
+        width: 20px;
+        height: 20px;
+        flex: 0 0 auto;
+      }
+
+      .active-action-icon .icon {
+        width: 20px;
+        height: 20px;
+      }
+
+      .action-menu-toggle {
+        display: grid;
+        place-items: center;
+        border-left: 1px solid rgba(255, 255, 255, 0.3);
+        background: var(--primary-dark);
+      }
+
+      .corner-action.search-open .action-menu-toggle {
+        border-left-color: var(--line);
+      }
+
+      .action-menu-toggle svg {
+        width: 19px;
+        height: 19px;
+        transition: transform 140ms ease;
+      }
+
+      .corner-action.menu-open .action-menu-toggle svg {
+        transform: rotate(180deg);
+      }
+
+      .action-menu {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        z-index: 30;
+        display: grid;
+        gap: 4px;
+        width: 194px;
+        padding: 6px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+        box-shadow: 0 18px 42px rgba(16, 24, 32, 0.24);
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(-6px) scale(0.98);
+        transform-origin: top right;
+        transition: opacity 140ms ease, transform 140ms ease, visibility 140ms ease;
+        visibility: hidden;
+      }
+
+      .action-menu::before {
+        content: "";
+        position: absolute;
+        top: -7px;
+        right: 14px;
+        width: 12px;
+        height: 12px;
+        border-left: 1px solid var(--line);
+        border-top: 1px solid var(--line);
+        background: var(--surface);
+        transform: rotate(45deg);
+      }
+
+      .corner-action.menu-open .action-menu {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateY(0) scale(1);
+        visibility: visible;
+      }
+
+      .action-menu[hidden] {
+        display: none;
+      }
+
+      .action-option {
+        display: grid;
+        grid-template-columns: 26px minmax(0, 1fr);
+        align-items: center;
+        gap: 8px;
+        min-height: 44px;
+        border: 0;
+        padding: 0 10px;
+        background: transparent;
+        color: var(--ink);
+        text-align: left;
+      }
+
+      .action-option.active {
+        background: rgba(15, 116, 100, 0.1);
+        color: var(--primary-dark);
+      }
+
+      .action-option span {
+        min-width: 0;
+      }
+
+      .label {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .concept-controls {
+        display: grid;
+        grid-template-columns: 190px 220px 230px;
+        justify-content: end;
+        gap: 8px;
+        margin: 0 0 12px;
+      }
+
+      .image-select {
+        width: 100%;
+        min-height: 38px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 0 34px 0 10px;
+        background: var(--surface);
+        color: var(--muted);
+        font: inherit;
+        font-size: 13px;
+        font-weight: 760;
+      }
+
+      .opacity-control {
+        min-height: 38px;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) 42px;
+        align-items: center;
+        gap: 8px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 0 10px;
+        background: var(--surface);
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 760;
+      }
+
+      .opacity-control input {
+        width: 100%;
+        accent-color: var(--primary);
+      }
+
+      .opacity-value {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .result-stage {
+        --rail-darkness: 0.62;
+        --card-bg-opacity: 0.46;
+        margin-bottom: 14px;
+      }
+
+      .result-card {
+        --result-image: url("../meat-seafood-image-probe/web-ground-beef-samples/sizzling-your-wallet-price-of-ground-beef-rea__01__score5__twitter-image.jpg");
+        position: relative;
+        min-width: 0;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+        color: var(--ink);
+        overflow: hidden;
+        isolation: isolate;
+      }
+
+      .result-title {
+        position: relative;
+        z-index: 2;
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--line);
+        background: rgba(255, 253, 248, 0.96);
+        color: var(--ink);
+        font-size: 15px;
+        font-weight: 820;
+      }
+
+      .result-image-frame {
+        position: relative;
+        min-width: 0;
+        aspect-ratio: 16 / 9;
+        overflow: hidden;
+        background: #827864;
+        isolation: isolate;
+      }
+
+      .result-stage[data-image-mode="wide"] .result-card {
+        --result-image: url("../meat-seafood-image-probe/web-ground-beef-samples/sizzling-your-wallet-price-of-ground-beef-rea__01__score5__twitter-image.jpg");
+      }
+
+      .result-stage[data-image-mode="wide-beef"] .result-card {
+        --result-image: url("../meat-seafood-image-probe/web-ground-beef-samples/who-really-cares-about-the-leanness-of-ground__01__score5__twitter-image.jpeg");
+      }
+
+      .result-stage[data-image-mode="ultrawide"] .result-card {
+        --result-image: url("../meat-seafood-image-probe/openfoodfacts/01__00944618__MAHI-MAHI-Burgers.jpg");
+      }
+
+      .result-stage[data-image-mode="phone"] .result-card {
+        --result-image: url("../supermarket-pics-jun29/20260629_220148.jpg");
+      }
+
+      .result-stage[data-image-mode="vertical"] .result-card {
+        --result-image: url("../.codex-remote-attachments/019f0114-f66e-7922-bf62-0000f7fc51ce/936c3716-2072-470b-a398-c644e75a5354/1-Photo-1.jpg");
+      }
+
+      .result-stage[data-image-mode="small"] .result-card {
+        --result-image: url("../supermarket-pics-jun29/_audit_report/thumbs/20260629_144527.jpg");
+      }
+
+      .result-stage[data-image-mode="small-stretch"] .result-card {
+        --result-image: url("../supermarket-pics-jun29/_audit_report/thumbs/20260629_144527.jpg");
+      }
+
+      .result-image-pane {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        min-width: 0;
+        overflow: hidden;
+      }
+
+      .result-image-pane::before,
+      .result-image-pane::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+      }
+
+      .result-image-pane::before {
+        z-index: 0;
+        pointer-events: none;
+        background-image: var(--result-image);
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
+        opacity: var(--card-bg-opacity);
+        filter: blur(14px) saturate(0.95);
+        transform: scale(1.08);
+      }
+
+      .result-image-pane::after {
+        z-index: 1;
+        background-image: var(--result-image);
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: contain;
+      }
+
+      .result-stage[data-image-mode="small-stretch"] .result-image-pane::after {
+        background-position: center;
+        background-size: 100% 100%;
+      }
+
+      .unit {
+        color: rgba(255, 253, 248, 0.78);
+        font-size: 13px;
+      }
+
+      .protein-number {
+        font-size: clamp(56px, 18vw, 118px);
+        line-height: 0.95;
+        font-weight: 880;
+        letter-spacing: 0;
+      }
+
+      .energy-number {
+        font-size: clamp(28px, 7vw, 46px);
+        line-height: 1;
+        font-weight: 820;
+        letter-spacing: 0;
+      }
+
+      .food-name {
+        color: rgba(255, 253, 248, 0.86);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .metric-chip {
+        position: absolute;
+        z-index: 3;
+        min-width: 0;
+        padding: 14px 16px;
+        border-radius: 8px;
+        color: #fffdf8;
+        overflow: hidden;
+        isolation: isolate;
+        text-shadow: 0 1px 8px rgba(0, 0, 0, 0.24);
+      }
+
+      .metric-chip::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        background: rgba(16, 24, 32, var(--rail-darkness));
+        backdrop-filter: blur(2px);
+        pointer-events: none;
+      }
+
+      .metric-chip > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .protein-chip {
+        top: 18px;
+        left: 18px;
+        max-width: min(390px, 58%);
+      }
+
+      .protein-chip .protein-number {
+        margin-bottom: 10px;
+        font-size: clamp(46px, 10vw, 96px);
+        white-space: nowrap;
+      }
+
+      .protein-chip .unit,
+      .energy-chip .label,
+      .energy-chip .unit {
+        color: rgba(255, 253, 248, 0.78);
+      }
+
+      .energy-chip {
+        right: 18px;
+        bottom: 18px;
+        display: grid;
+        justify-items: end;
+        gap: 5px;
+        max-width: min(250px, 48%);
+        text-align: right;
+      }
+
+      .output {
+        display: grid;
+        gap: 10px;
+      }
+
+      details {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+        overflow: hidden;
+      }
+
+      summary {
+        padding: 14px;
+        cursor: default;
+        font-weight: 780;
+      }
+
+      pre {
+        max-height: 280px;
+        margin: 0;
+        padding: 14px;
+        overflow: auto;
+        border-top: 1px solid var(--line);
+        background: var(--surface-2);
+        white-space: pre-wrap;
+        font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+
+      @media (max-width: 620px) {
+        .app {
+          padding: 14px;
+        }
+
+        .icon {
+          width: 17px;
+          height: 17px;
+        }
+
+        .topbar {
+          gap: 8px;
+        }
+
+        h1 {
+          font-size: 26px;
+        }
+
+        .quick-action {
+          min-width: 134px;
+          grid-template-columns: minmax(0, 1fr) 38px;
+        }
+
+        .default-action,
+        .action-menu-toggle {
+          min-height: 48px;
+        }
+
+        .default-action {
+          gap: 6px;
+          padding: 0 10px;
+          font-size: 14px;
+        }
+
+        .action-menu {
+          width: 178px;
+        }
+
+        .concept-controls {
+          grid-template-columns: 1fr;
+        }
+
+        .opacity-control {
+          grid-template-columns: auto minmax(0, 1fr) 38px;
+        }
+
+        .result-title {
+          padding: 12px 14px;
+          font-size: 14px;
+        }
+
+        .result-image-frame {
+          aspect-ratio: 1.18 / 1;
+        }
+
+        .metric-chip {
+          padding: 10px 12px;
+        }
+
+        .protein-chip {
+          top: 12px;
+          left: 12px;
+          max-width: 64%;
+        }
+
+        .protein-chip .protein-number {
+          margin-bottom: 5px;
+          font-size: clamp(36px, 13vw, 48px);
+        }
+
+        .protein-chip .unit,
+        .energy-chip .label,
+        .energy-chip .unit {
+          font-size: 11px;
+        }
+
+        .energy-chip {
+          right: 12px;
+          bottom: 12px;
+          gap: 2px;
+          max-width: 50%;
+        }
+
+        .energy-chip .energy-number {
+          font-size: clamp(28px, 9vw, 38px);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <header class="topbar">
+        <h1>Protein Scan</h1>
+        <div class="corner-action" id="cornerAction">
+          <div class="quick-action">
+            <button class="default-action" id="defaultAction" type="button" aria-label="Run UPC">
+              <span class="active-action-icon" id="activeActionIcon">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M4 7V5h4M16 5h4v2M4 17v2h4M20 17v2h-4M7 9h1M10 9h1M13 9h4M7 12h5M15 12h2M7 15h2M12 15h5" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+              </span>
+              <span id="activeActionLabel">UPC</span>
+            </button>
+            <div class="inline-search" id="inlineSearch">
+              <input id="inlineSearchInput" class="inline-search-input" type="text" autocomplete="off" spellcheck="false" placeholder="Search foods" />
+              <button class="inline-search-close" id="searchClose" type="button" aria-label="Close search">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M7 7l10 10M17 7L7 17" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+                </svg>
+              </button>
+            </div>
+            <button class="action-menu-toggle" id="actionMenuToggle" type="button" aria-label="Choose scan mode" aria-expanded="false">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M7 10l5 5 5-5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </button>
+          </div>
+          <div class="action-menu" id="actionMenu" hidden>
+            <button class="action-option active" type="button" data-action="upc" data-label="UPC">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M4 7V5h4M16 5h4v2M4 17v2h4M20 17v2h-4M7 9h1M10 9h1M13 9h4M7 12h5M15 12h2M7 15h2M12 15h5" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              </svg>
+              <span>UPC</span>
+            </button>
+            <button class="action-option" type="button" data-action="nutrition" data-label="Nutrition">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M7 4h10v16H7V4zM9 8h6M9 11h6M9 14h3M14 14h1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              <span>Nutrition Facts</span>
+            </button>
+            <button class="action-option" type="button" data-action="meat" data-label="Meat/text">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M5 6h14M5 10h10M5 14h14M5 18h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              </svg>
+              <span>Meat/text</span>
+            </button>
+            <button class="action-option" type="button" data-action="search" data-label="Search">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle cx="11" cy="11" r="6" stroke="currentColor" stroke-width="2" />
+                <path d="M16 16l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              </svg>
+              <span>Search</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <section class="concept-controls" aria-label="Result mockup controls">
+        <select class="image-select" id="imageModeSelect" aria-label="Image test mode">
+          <option value="wide">Wide 16:9</option>
+          <option value="wide-beef">Wide beef</option>
+          <option value="ultrawide">Ultra-wide</option>
+          <option value="phone">Phone photo</option>
+          <option value="vertical">Vertical</option>
+          <option value="small">Small</option>
+          <option value="small-stretch">Small stretch</option>
+        </select>
+        <label class="opacity-control">
+          <span>Darkness</span>
+          <input id="railOpacityInput" type="range" min="10" max="92" value="62" />
+          <span class="opacity-value" id="railOpacityValue">62%</span>
+        </label>
+        <label class="opacity-control">
+          <span>Background</span>
+          <input id="cardBgInput" type="range" min="0" max="80" value="46" />
+          <span class="opacity-value" id="cardBgValue">46%</span>
+        </label>
+      </section>
+
+      <section class="result-stage" data-image-mode="wide" aria-label="Parsed result layout concepts">
+        <div class="result-card" role="img" aria-label="Ground beef package">
+          <div class="result-title">Ground beef, 80% lean / 20% fat</div>
+          <div class="result-image-frame">
+            <div class="result-image-pane" aria-hidden="true"></div>
+            <div class="metric-chip protein-chip">
+              <div class="protein-number">38.2%</div>
+              <div class="unit">% calories from protein</div>
+            </div>
+            <div class="metric-chip energy-chip">
+              <div class="label">Energy density</div>
+              <div>
+                <div class="energy-number">2.54</div>
+                <div class="unit">kcal/g</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="output">
+        <details open>
+          <summary>Recognized lines</summary>
+          <pre>01.01 [1025,605,1812,738] GROUND BEEF
+01.02 [841,727,2000,859] 80%, LEAN/20% FAT
+01.03 [1064,848,1800,968] VALUE PACK
+02.01 [442,1613,2442,1711] SAFE HANDLING INSTRUCTIONS</pre>
+        </details>
+        <details open>
+          <summary>Raw OCR text</summary>
+          <pre>GROUND BEEF
+80%, LEAN/20% FAT
+VALUE PACK
+NET WT 1.42 lb
+UNIT PRICE $5.49/lb
+TOTAL PRICE $7.80</pre>
+        </details>
+        <details>
+          <summary>Blocks JSON</summary>
+          <pre>{
+  "blocks": [
+    { "text": "GROUND BEEF" },
+    { "text": "80%, LEAN/20% FAT" }
+  ]
+}</pre>
+        </details>
+      </section>
+    </main>
+    <script>
+      const cornerAction = document.getElementById("cornerAction");
+      const defaultAction = document.getElementById("defaultAction");
+      const actionMenuToggle = document.getElementById("actionMenuToggle");
+      const actionMenu = document.getElementById("actionMenu");
+      const activeActionIcon = document.getElementById("activeActionIcon");
+      const activeActionLabel = document.getElementById("activeActionLabel");
+      const actionOptions = document.querySelectorAll("[data-action]");
+      const searchClose = document.getElementById("searchClose");
+      const inlineSearchInput = document.getElementById("inlineSearchInput");
+      const imageModeSelect = document.getElementById("imageModeSelect");
+      const railOpacityInput = document.getElementById("railOpacityInput");
+      const railOpacityValue = document.getElementById("railOpacityValue");
+      const cardBgInput = document.getElementById("cardBgInput");
+      const cardBgValue = document.getElementById("cardBgValue");
+      const resultStage = document.querySelector(".result-stage");
+      let currentAction = "upc";
+
+      function saveAction(action) {
+        try {
+          window.localStorage.setItem("proteinScanMockAction", action);
+        } catch {
+          // The mockup still works if local file storage is blocked.
+        }
+      }
+
+      function loadAction() {
+        try {
+          return window.localStorage.getItem("proteinScanMockAction");
+        } catch {
+          return null;
+        }
+      }
+
+      function setCurrentAction(option, revealSearch = true) {
+        currentAction = option.dataset.action;
+        activeActionLabel.textContent = option.dataset.label;
+        activeActionIcon.innerHTML = option.querySelector(".icon").outerHTML;
+        defaultAction.setAttribute("aria-label", `Run ${option.dataset.label}`);
+
+        for (const otherOption of actionOptions) {
+          otherOption.classList.toggle("active", otherOption === option);
+        }
+
+        cornerAction.classList.remove("menu-open");
+        actionMenu.hidden = true;
+        actionMenuToggle.setAttribute("aria-expanded", "false");
+
+        if (currentAction !== "search") {
+          cornerAction.classList.remove("search-open");
+        } else if (revealSearch) {
+          cornerAction.classList.add("search-open");
+          inlineSearchInput.focus();
+        }
+
+        saveAction(currentAction);
+      }
+
+      const savedAction = loadAction();
+      const savedOption = savedAction ? document.querySelector(`[data-action="${savedAction}"]`) : null;
+      if (savedOption) {
+        setCurrentAction(savedOption, false);
+      }
+
+      actionMenuToggle.addEventListener("click", () => {
+        const willOpen = !cornerAction.classList.contains("menu-open");
+        cornerAction.classList.toggle("menu-open", willOpen);
+        actionMenu.hidden = !willOpen;
+        actionMenuToggle.setAttribute("aria-expanded", String(willOpen));
+      });
+
+      defaultAction.addEventListener("click", () => {
+        cornerAction.classList.remove("menu-open");
+        actionMenu.hidden = true;
+        actionMenuToggle.setAttribute("aria-expanded", "false");
+
+        if (currentAction === "search") {
+          cornerAction.classList.add("search-open");
+          inlineSearchInput.focus();
+          return;
+        }
+
+        cornerAction.classList.remove("search-open");
+        defaultAction.classList.add("is-running");
+        window.setTimeout(() => {
+          defaultAction.classList.remove("is-running");
+        }, 160);
+      });
+
+      for (const option of actionOptions) {
+        option.addEventListener("click", () => {
+          setCurrentAction(option);
+        });
+      }
+
+      searchClose.addEventListener("click", () => {
+        cornerAction.classList.remove("search-open");
+        inlineSearchInput.value = "";
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          cornerAction.classList.remove("menu-open", "search-open");
+          actionMenu.hidden = true;
+          actionMenuToggle.setAttribute("aria-expanded", "false");
+        }
+      });
+
+      document.addEventListener("click", (event) => {
+        if (!cornerAction.contains(event.target)) {
+          cornerAction.classList.remove("menu-open");
+          actionMenu.hidden = true;
+          actionMenuToggle.setAttribute("aria-expanded", "false");
+        }
+      });
+
+      imageModeSelect.addEventListener("change", () => {
+        resultStage.dataset.imageMode = imageModeSelect.value;
+      });
+
+      function updateRailOpacity() {
+        const opacity = Number(railOpacityInput.value) / 100;
+        resultStage.style.setProperty("--rail-darkness", opacity.toFixed(2));
+        railOpacityValue.textContent = `${railOpacityInput.value}%`;
+      }
+
+      function updateCardBackground() {
+        const opacity = Number(cardBgInput.value) / 100;
+        resultStage.style.setProperty("--card-bg-opacity", opacity.toFixed(2));
+        cardBgValue.textContent = `${cardBgInput.value}%`;
+      }
+
+      railOpacityInput.addEventListener("input", updateRailOpacity);
+      cardBgInput.addEventListener("input", updateCardBackground);
+      updateRailOpacity();
+      updateCardBackground();
+    </script>
+  </body>
+</html>
