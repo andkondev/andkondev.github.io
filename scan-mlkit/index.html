@@ -8,64 +8,103 @@
   <body>
     <main class="app">
       <header class="topbar">
-        <div>
-          <p class="eyebrow">Android scanner test</p>
-          <h1>Protein Scan</h1>
+        <h1>Protein Scan</h1>
+        <div class="corner-action" id="cornerAction">
+          <div class="quick-action">
+            <button class="default-action" id="defaultAction" type="button" aria-label="Run UPC">
+              <span class="active-action-icon" id="activeActionIcon">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M4 7V5h4M16 5h4v2M4 17v2h4M20 17v2h-4M7 9h1M10 9h1M13 9h4M7 12h5M15 12h2M7 15h2M12 15h5" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+              </span>
+              <span id="activeActionLabel">UPC</span>
+            </button>
+            <div class="inline-search" id="inlineSearch">
+              <input id="meatSearchInput" class="inline-search-input" type="text" autocomplete="off" spellcheck="false" placeholder="Search foods" />
+              <button class="inline-search-close" id="meatSearchClear" type="button" aria-label="Close search">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M7 7l10 10M17 7L7 17" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+                </svg>
+              </button>
+            </div>
+            <button class="action-menu-toggle" id="actionMenuToggle" type="button" aria-label="Choose scan mode" aria-expanded="false">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M8 10l4 4 4-4" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </button>
+          </div>
+          <div class="action-menu" id="actionMenu" hidden>
+            <button class="action-option active" type="button" data-action="upc" data-label="UPC">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M4 7V5h4M16 5h4v2M4 17v2h4M20 17v2h-4M7 9h1M10 9h1M13 9h4M7 12h5M15 12h2M7 15h2M12 15h5" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              </svg>
+              <span>UPC</span>
+            </button>
+            <button class="action-option" type="button" data-action="nutrition" data-label="Nutrition">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M7 4h10v16H7V4zM9 8h6M9 11h6M9 14h3M14 14h1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              <span>Nutrition Facts</span>
+            </button>
+            <button class="action-option" type="button" data-action="meat" data-label="Meat/text">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M5 6h14M5 10h10M5 14h14M5 18h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              </svg>
+              <span>Meat/text</span>
+            </button>
+            <button class="action-option" type="button" data-action="search" data-label="Search">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle cx="11" cy="11" r="6" stroke="currentColor" stroke-width="2" />
+                <path d="M16 16l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              </svg>
+              <span>Search</span>
+            </button>
+          </div>
         </div>
-        <div class="status" id="status">Ready</div>
+        <div class="status sr-only" id="status" aria-live="polite"></div>
       </header>
 
-      <section class="actions" aria-label="Scan actions">
-        <button class="primary" id="barcodeBtn" type="button">Scan UPC</button>
-        <button id="cameraBtn" type="button">Take Photo</button>
-        <button id="galleryBtn" type="button">Pick Image</button>
+      <section id="meatResults" class="search-results" aria-label="Food search results"></section>
+
+      <section class="visual-controls" aria-label="Result visual controls">
+        <label class="opacity-control">
+          <span>Darkness</span>
+          <input id="railOpacityInput" type="range" min="10" max="92" value="62" />
+          <span class="opacity-value" id="railOpacityValue">62%</span>
+        </label>
+        <label class="opacity-control">
+          <span>Background</span>
+          <input id="cardBgInput" type="range" min="0" max="80" value="46" />
+          <span class="opacity-value" id="cardBgValue">46%</span>
+        </label>
       </section>
 
-      <section class="manual-search" aria-label="Whole foods and ingredients search">
-        <label class="label" for="meatSearchInput">Whole foods + ingredients</label>
-        <div class="search-field">
-          <input id="meatSearchInput" class="search-input" type="text" autocomplete="off" spellcheck="false" placeholder="80 20, banana, olive oil, sugar" />
-          <button class="search-clear" id="meatSearchClear" type="button" aria-label="Clear whole foods search">
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M7 7l10 10M17 7L7 17" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
-            </svg>
-          </button>
+      <section class="result-stage" id="resultStage" aria-label="Parsed nutrition">
+        <article class="result-card" id="resultCard">
+          <div class="result-title" id="resultTitle">Ready</div>
+          <div class="result-image-frame">
+            <div class="result-bg" id="resultBg" aria-hidden="true"></div>
+            <img id="preview" class="result-photo" alt="" hidden />
+            <div class="placeholder" id="placeholder">No image yet</div>
+            <div class="metric-chip protein-chip">
+              <div class="protein-number" id="proteinPercent">--</div>
+              <div class="unit">% calories from protein</div>
+            </div>
+            <div class="metric-chip energy-chip">
+              <div class="label">Energy density</div>
+              <div>
+                <div class="energy-number" id="energyDensity">--</div>
+                <div class="unit">kcal/g</div>
+              </div>
+            </div>
+          </div>
+        </article>
+        <div class="sr-only" aria-hidden="true">
+          <span id="calories">--</span>
+          <span id="protein">--</span>
+          <span id="serving">--</span>
+          <span id="imageInfo">--</span>
         </div>
-        <div id="meatResults" class="search-results"></div>
-      </section>
-
-      <section class="preview">
-        <img id="preview" alt="" hidden />
-        <div class="placeholder" id="placeholder">No image yet</div>
-      </section>
-
-      <section class="metrics" aria-label="Parsed nutrition">
-        <article>
-          <div class="label">Protein percentage</div>
-          <div class="value" id="proteinPercent">--</div>
-          <div class="unit">% calories from protein</div>
-        </article>
-        <article>
-          <div class="label">Energy density</div>
-          <div class="value" id="energyDensity">--</div>
-          <div class="unit">kcal/g</div>
-        </article>
-        <article>
-          <div class="label">Calories</div>
-          <div class="value small" id="calories">--</div>
-        </article>
-        <article>
-          <div class="label">Protein</div>
-          <div class="value small" id="protein">--</div>
-        </article>
-        <article>
-          <div class="label">Serving</div>
-          <div class="value small" id="serving">--</div>
-        </article>
-        <article>
-          <div class="label">Image</div>
-          <div class="value small" id="imageInfo">--</div>
-        </article>
       </section>
 
       <section class="output">
