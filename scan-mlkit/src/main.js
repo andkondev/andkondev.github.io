@@ -1309,7 +1309,7 @@ function showProduct(product, barcode) {
   setCurrentFood({
     title,
     source: "Open Food Facts",
-    proteinPct,
+    proteinPct: proteinPercent,
     energyDensity,
     servingOptions: makeServingOptions({ servingLabel, servingGrams }),
     defaultAmount: servingLabel ? 1 : 1,
