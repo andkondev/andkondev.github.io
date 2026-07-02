@@ -40,6 +40,7 @@ const els = {
   logTargetDate: document.getElementById("logTargetDate"),
   confirmAddLog: document.getElementById("confirmAddLog"),
   cancelAddLog: document.getElementById("cancelAddLog"),
+  backFromAddButton: document.getElementById("backFromAddButton"),
   logView: document.getElementById("logView"),
   backToScanButton: document.getElementById("backToScanButton"),
   logDateInput: document.getElementById("logDateInput"),
@@ -328,10 +329,16 @@ function renderAddLogForm(reset = false) {
   renderLogTargetDate();
 }
 
-function openAddLogPanel() {
+function showAddView() {
   if (!currentFood) return;
+  closeActionMenu();
+  closeSearchMode();
+  els.meatResults.innerHTML = "";
+  els.logView.hidden = true;
   renderAddLogForm(true);
   els.addLogPanel.hidden = false;
+  els.app.classList.remove("log-mode");
+  els.app.classList.add("add-mode");
   requestAnimationFrame(() => els.logAmountInput.focus());
 }
 
@@ -363,8 +370,7 @@ function addCurrentFoodToLog() {
 
   logStore.entries.push(entry);
   saveLogStore();
-  els.addLogPanel.hidden = true;
-  renderLogView();
+  showScannerView();
   setStatus(`Added ${currentFood.title} to ${formatLogDate(entry.date)}`);
 }
 
@@ -450,13 +456,15 @@ function showLogView() {
   els.meatResults.innerHTML = "";
   els.addLogPanel.hidden = true;
   els.logView.hidden = false;
+  els.app.classList.remove("add-mode");
   els.app.classList.add("log-mode");
   renderLogView();
   requestAnimationFrame(() => els.logDateInput.focus());
 }
 
 function showScannerView() {
-  els.app.classList.remove("log-mode");
+  els.app.classList.remove("add-mode", "log-mode");
+  els.addLogPanel.hidden = true;
   els.logView.hidden = true;
 }
 
@@ -1747,15 +1755,12 @@ for (const option of els.actionOptions) {
 }
 
 els.addLogToggle.addEventListener("click", () => {
-  if (els.addLogPanel.hidden) {
-    openAddLogPanel();
-  } else {
-    els.addLogPanel.hidden = true;
-  }
+  showAddView();
 });
 els.cancelAddLog.addEventListener("click", () => {
-  els.addLogPanel.hidden = true;
+  showScannerView();
 });
+els.backFromAddButton.addEventListener("click", showScannerView);
 els.confirmAddLog.addEventListener("click", addCurrentFoodToLog);
 els.viewLogButton.addEventListener("click", showLogView);
 els.backToScanButton.addEventListener("click", showScannerView);
