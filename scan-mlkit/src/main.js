@@ -4,6 +4,7 @@ import { BarcodeFormat, BarcodeScanner } from "@capacitor-mlkit/barcode-scanning
 import { CapacitorPluginMlKitTextRecognition } from "@pantrist/capacitor-plugin-ml-kit-text-recognition";
 
 const els = {
+  app: document.querySelector(".app"),
   cornerAction: document.getElementById("cornerAction"),
   defaultAction: document.getElementById("defaultAction"),
   actionMenuToggle: document.getElementById("actionMenuToggle"),
@@ -30,6 +31,22 @@ const els = {
   railOpacityValue: document.getElementById("railOpacityValue"),
   cardBgInput: document.getElementById("cardBgInput"),
   cardBgValue: document.getElementById("cardBgValue"),
+  addLogToggle: document.getElementById("addLogToggle"),
+  viewLogButton: document.getElementById("viewLogButton"),
+  addLogPanel: document.getElementById("addLogPanel"),
+  logAmountInput: document.getElementById("logAmountInput"),
+  logServingSelect: document.getElementById("logServingSelect"),
+  logFoodTitle: document.getElementById("logFoodTitle"),
+  logTargetDate: document.getElementById("logTargetDate"),
+  confirmAddLog: document.getElementById("confirmAddLog"),
+  cancelAddLog: document.getElementById("cancelAddLog"),
+  logView: document.getElementById("logView"),
+  backToScanButton: document.getElementById("backToScanButton"),
+  logDateInput: document.getElementById("logDateInput"),
+  dayProteinPercent: document.getElementById("dayProteinPercent"),
+  dayEnergyDensity: document.getElementById("dayEnergyDensity"),
+  logNote: document.getElementById("logNote"),
+  logEntries: document.getElementById("logEntries"),
   linesText: document.getElementById("linesText"),
   rawText: document.getElementById("rawText"),
   jsonText: document.getElementById("jsonText"),
@@ -42,6 +59,7 @@ const BARCODE_FORMATS = [
   BarcodeFormat.UpcE,
 ];
 const BATCH_OCR_BASE_URL = "http://127.0.0.1:8765";
+const LOG_STORAGE_KEY = "proteinScanLogV1";
 
 const QUERY_ANIMALS = [
   "beef", "veal", "lamb", "pork", "chicken", "turkey", "duck", "goose",
@@ -112,6 +130,8 @@ const LABEL_WORD_FIXES = [
 let meatFoods = [];
 let meatLoadPromise = null;
 let currentAction = "upc";
+let currentFood = null;
+let logStore = loadLogStore();
 
 function setStatus(text) {
   els.status.textContent = text;
@@ -153,6 +173,293 @@ function loadAction() {
   }
 }
 
+function localDateKey(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function loadLogStore() {
+  try {
+    const stored = JSON.parse(window.localStorage.getItem(LOG_STORAGE_KEY) || "null");
+    if (stored && Array.isArray(stored.entries)) {
+      return {
+        version: 1,
+        selectedDate: stored.selectedDate || localDateKey(),
+        entries: stored.entries,
+      };
+    }
+  } catch {
+    // Logging remains optional if local storage is unavailable or malformed.
+  }
+  return {
+    version: 1,
+    selectedDate: localDateKey(),
+    entries: [],
+  };
+}
+
+function saveLogStore() {
+  try {
+    window.localStorage.setItem(LOG_STORAGE_KEY, JSON.stringify(logStore));
+  } catch {
+    setStatus("Log could not be saved on this device");
+  }
+}
+
+function formatLogDate(dateKey) {
+  const [year, month, day] = String(dateKey || "").split("-").map(Number);
+  if (!year || !month || !day) return "selected day";
+  return new Date(year, month - 1, day).toLocaleDateString(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+function compactNumber(value, digits = 1) {
+  if (!Number.isFinite(value)) return "--";
+  if (Number.isInteger(value)) return String(value);
+  return formatNumber(value, digits).replace(/\.0$/, "");
+}
+
+function parseServingGrams(text) {
+  const value = String(text || "");
+  const parenthetical = [...value.matchAll(/\((\d+(?:\.\d+)?)\s*g(?:rams?)?\)/gi)].pop();
+  if (parenthetical) return Number(parenthetical[1]);
+
+  const grams = value.match(/(\d+(?:\.\d+)?)\s*g(?:rams?)?\b/i);
+  if (grams) return Number(grams[1]);
+
+  const ounces = value.match(/(\d+(?:\.\d+)?)\s*oz\b/i);
+  if (ounces) return Number(ounces[1]) * 28.3495;
+
+  return null;
+}
+
+function dedupeServingOptions(options) {
+  const seen = new Set();
+  return options.filter((option) => {
+    const key = `${option.id}:${option.label}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function makeServingOptions({ servingLabel = "", servingGrams = null } = {}) {
+  const options = [];
+  if (servingLabel) {
+    options.push({
+      id: "serving",
+      label: servingLabel,
+      grams: Number.isFinite(servingGrams) ? servingGrams : null,
+    });
+  }
+  options.push({ id: "g", label: "g", grams: null });
+  options.push({ id: "100g", label: "100 g", grams: 100 });
+  return dedupeServingOptions(options);
+}
+
+function makeLogId() {
+  if (window.crypto?.randomUUID) return window.crypto.randomUUID();
+  return `log-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+function selectedLogDate() {
+  return logStore.selectedDate || localDateKey();
+}
+
+function currentServingOption() {
+  if (!currentFood) return null;
+  return currentFood.servingOptions.find((option) => option.id === els.logServingSelect.value)
+    || currentFood.servingOptions[0]
+    || null;
+}
+
+function gramsForAmount(amount, option) {
+  if (!Number.isFinite(amount) || amount <= 0 || !option) return null;
+  if (option.id === "g") return amount;
+  if (Number.isFinite(option.grams)) return amount * option.grams;
+  return null;
+}
+
+function renderLogTargetDate() {
+  els.logTargetDate.textContent = formatLogDate(selectedLogDate());
+}
+
+function setCurrentFood(food) {
+  const proteinPct = Number(food?.proteinPct);
+  const energyDensity = Number(food?.energyDensity);
+  currentFood = food && Number.isFinite(proteinPct) && Number.isFinite(energyDensity)
+    ? {
+      ...food,
+      title: food.title || "Untitled food",
+      proteinPct,
+      energyDensity,
+      servingOptions: food.servingOptions?.length ? food.servingOptions : makeServingOptions(),
+      defaultAmount: Number.isFinite(food.defaultAmount) ? food.defaultAmount : 1,
+      defaultUnit: food.defaultUnit || food.servingOptions?.[0]?.id || "100g",
+    }
+    : null;
+
+  els.addLogToggle.disabled = !currentFood;
+  els.logFoodTitle.textContent = currentFood?.title || "No food selected";
+  if (!currentFood) {
+    els.addLogPanel.hidden = true;
+    return;
+  }
+  renderAddLogForm(true);
+}
+
+function renderAddLogForm(reset = false) {
+  if (!currentFood) return;
+
+  els.logFoodTitle.textContent = currentFood.title;
+  els.logServingSelect.innerHTML = currentFood.servingOptions.map((option) => (
+    `<option value="${escapeHtml(option.id)}">${escapeHtml(option.label)}</option>`
+  )).join("");
+
+  if (reset) {
+    els.logAmountInput.value = compactNumber(currentFood.defaultAmount, 1);
+    els.logServingSelect.value = currentFood.defaultUnit;
+  }
+  renderLogTargetDate();
+}
+
+function openAddLogPanel() {
+  if (!currentFood) return;
+  renderAddLogForm(true);
+  els.addLogPanel.hidden = false;
+  requestAnimationFrame(() => els.logAmountInput.focus());
+}
+
+function addCurrentFoodToLog() {
+  if (!currentFood) return;
+
+  const amount = Number(els.logAmountInput.value);
+  if (!Number.isFinite(amount) || amount <= 0) {
+    setStatus("Enter an amount before adding");
+    els.logAmountInput.focus();
+    return;
+  }
+
+  const option = currentServingOption();
+  const gramAmount = gramsForAmount(amount, option);
+  const entry = {
+    id: makeLogId(),
+    date: selectedLogDate(),
+    addedAt: new Date().toISOString(),
+    title: currentFood.title,
+    source: currentFood.source || "",
+    amount,
+    servingId: option?.id || "",
+    servingLabel: option?.label || "",
+    gramAmount: Number.isFinite(gramAmount) ? gramAmount : null,
+    proteinPct: currentFood.proteinPct,
+    energyDensity: currentFood.energyDensity,
+  };
+
+  logStore.entries.push(entry);
+  saveLogStore();
+  els.addLogPanel.hidden = true;
+  renderLogView();
+  setStatus(`Added ${currentFood.title} to ${formatLogDate(entry.date)}`);
+}
+
+function logEntriesForSelectedDate() {
+  const date = selectedLogDate();
+  return logStore.entries
+    .filter((entry) => entry.date === date)
+    .sort((a, b) => String(a.addedAt).localeCompare(String(b.addedAt)));
+}
+
+function summarizeLogEntries(entries) {
+  let grams = 0;
+  let calories = 0;
+  let proteinCalories = 0;
+  let skipped = 0;
+
+  for (const entry of entries) {
+    if (
+      Number.isFinite(entry.gramAmount)
+      && entry.gramAmount > 0
+      && Number.isFinite(entry.energyDensity)
+      && Number.isFinite(entry.proteinPct)
+    ) {
+      const entryCalories = entry.energyDensity * entry.gramAmount;
+      grams += entry.gramAmount;
+      calories += entryCalories;
+      proteinCalories += entryCalories * entry.proteinPct / 100;
+    } else {
+      skipped += 1;
+    }
+  }
+
+  return {
+    proteinPct: calories > 0 ? proteinCalories * 100 / calories : NaN,
+    energyDensity: grams > 0 ? calories / grams : NaN,
+    skipped,
+  };
+}
+
+function renderLogView() {
+  renderLogTargetDate();
+  els.logDateInput.value = selectedLogDate();
+
+  const entries = logEntriesForSelectedDate();
+  const summary = summarizeLogEntries(entries);
+  els.dayProteinPercent.textContent = Number.isFinite(summary.proteinPct) ? `${formatNumber(summary.proteinPct, 1)}%` : "--";
+  els.dayEnergyDensity.textContent = Number.isFinite(summary.energyDensity) ? formatNumber(summary.energyDensity, 2) : "--";
+  els.logNote.textContent = summary.skipped
+    ? `${summary.skipped} item${summary.skipped === 1 ? "" : "s"} without gram amounts not included in day math.`
+    : "";
+
+  if (!entries.length) {
+    els.logEntries.innerHTML = `<div class="empty-log">No foods logged for ${escapeHtml(formatLogDate(selectedLogDate()))}.</div>`;
+    return;
+  }
+
+  els.logEntries.innerHTML = entries.map((entry) => `
+    <article class="log-entry">
+      <div>
+        <strong>${escapeHtml(entry.title)}</strong>
+        <span>${escapeHtml(compactNumber(entry.amount, 1))} ${escapeHtml(entry.servingLabel || "serving")}</span>
+      </div>
+      <div class="log-entry-metrics">
+        <span>${Number.isFinite(entry.proteinPct) ? `${formatNumber(entry.proteinPct, 1)}%` : "--"}</span>
+        <span>${Number.isFinite(entry.energyDensity) ? formatNumber(entry.energyDensity, 2) : "--"} kcal/g</span>
+      </div>
+      <button class="delete-log-entry" type="button" data-log-id="${escapeHtml(entry.id)}">Delete</button>
+    </article>
+  `).join("");
+
+  for (const button of els.logEntries.querySelectorAll("[data-log-id]")) {
+    button.addEventListener("click", () => {
+      logStore.entries = logStore.entries.filter((entry) => entry.id !== button.dataset.logId);
+      saveLogStore();
+      renderLogView();
+    });
+  }
+}
+
+function showLogView() {
+  closeActionMenu();
+  closeSearchMode();
+  els.meatResults.innerHTML = "";
+  els.addLogPanel.hidden = true;
+  els.logView.hidden = false;
+  els.app.classList.add("log-mode");
+  renderLogView();
+  requestAnimationFrame(() => els.logDateInput.focus());
+}
+
+function showScannerView() {
+  els.app.classList.remove("log-mode");
+  els.logView.hidden = true;
+}
+
 function closeActionMenu() {
   els.cornerAction.classList.remove("menu-open");
   els.actionMenu.hidden = true;
@@ -164,6 +471,7 @@ function setCurrentAction(option, revealSearch = true) {
   els.activeActionLabel.textContent = option.dataset.label;
   els.activeActionIcon.innerHTML = option.querySelector(".icon").outerHTML;
   els.defaultAction.setAttribute("aria-label", `Run ${option.dataset.label}`);
+  showScannerView();
 
   for (const otherOption of els.actionOptions) {
     otherOption.classList.toggle("active", otherOption === option);
@@ -940,9 +1248,15 @@ function updateParsed(parsed) {
   els.calories.textContent = hasCalories ? `${formatNumber(parsed.calories, 0)} kcal` : "--";
   els.protein.textContent = hasProtein ? `${formatNumber(parsed.proteinG, 1)} g` : "--";
   els.serving.textContent = hasServing ? `${formatNumber(parsed.servingG, 0)} g` : "--";
+  return {
+    proteinPct: proteinPercent,
+    energyDensity,
+    servingG: hasServing ? parsed.servingG : null,
+  };
 }
 
 function showEmptyResult(title, details = "") {
+  setCurrentFood(null);
   setResultVisual({
     title,
     placeholder: details || "No image available",
@@ -989,6 +1303,18 @@ function showProduct(product, barcode) {
     kcal_100g: kcal100g,
   }, null, 2);
   els.jsonText.textContent = JSON.stringify(product, null, 2);
+
+  const servingLabel = product.serving_size || "";
+  const servingGrams = parseServingGrams(servingLabel);
+  setCurrentFood({
+    title,
+    source: "Open Food Facts",
+    proteinPct,
+    energyDensity,
+    servingOptions: makeServingOptions({ servingLabel, servingGrams }),
+    defaultAmount: servingLabel ? 1 : 1,
+    defaultUnit: servingLabel ? "serving" : "100g",
+  });
 }
 
 async function loadMeatFoods() {
@@ -1043,6 +1369,15 @@ function showMeatFood(food) {
     fat100g: food.fat100g,
   }, null, 2);
   els.jsonText.textContent = JSON.stringify(food, null, 2);
+  setCurrentFood({
+    title: food.name,
+    source: "USDA",
+    proteinPct: food.proteinPct,
+    energyDensity: food.energyDensity,
+    servingOptions: makeServingOptions({ servingLabel: "100 g", servingGrams: 100 }),
+    defaultAmount: 100,
+    defaultUnit: "g",
+  });
   setStatus("USDA lookup done");
 }
 
@@ -1215,6 +1550,7 @@ async function scanSource(source) {
       imageSrc,
       placeholder: "Reading label",
     });
+    setCurrentFood(null);
     els.imageInfo.textContent = `${photo.format || "image"} - ${formatBytes(Math.round(photo.base64String.length * 0.75))}`;
 
     setStatus("Running ML Kit...");
@@ -1231,7 +1567,7 @@ async function scanSource(source) {
     const labelSummary = stickerFactsSummary(labelParse);
     const shouldApplyLabel = labelParse.search_query && labelParse.confidence >= 0.55 && labelParse.title_lines.length > 0;
 
-    updateParsed(parsed);
+    const parsedMetrics = updateParsed(parsed);
     els.linesText.textContent = lineSummary(result.blocks);
     els.rawText.textContent = [
       rawText.trim() || "(no text)",
@@ -1253,6 +1589,18 @@ async function scanSource(source) {
     } else if (labelParse.search_query) {
       els.resultTitle.textContent = labelParse.search_query;
     }
+    setCurrentFood({
+      title: labelParse.search_query || "Nutrition label",
+      source: "OCR",
+      proteinPct: parsedMetrics.proteinPct,
+      energyDensity: parsedMetrics.energyDensity,
+      servingOptions: makeServingOptions({
+        servingLabel: Number.isFinite(parsedMetrics.servingG) ? `${formatNumber(parsedMetrics.servingG, 0)} g` : "",
+        servingGrams: parsedMetrics.servingG,
+      }),
+      defaultAmount: Number.isFinite(parsedMetrics.servingG) ? 1 : 100,
+      defaultUnit: Number.isFinite(parsedMetrics.servingG) ? "serving" : "g",
+    });
     setStatus(shouldApplyLabel ? `Parsed label in ${elapsed} ms` : `Done in ${elapsed} ms`);
   } catch (error) {
     setStatus("Failed");
@@ -1348,6 +1696,7 @@ function updateCardBackground() {
 
 async function runCurrentAction() {
   closeActionMenu();
+  showScannerView();
 
   if (currentAction === "search") {
     openSearchMode();
@@ -1389,9 +1738,32 @@ els.defaultAction.addEventListener("click", () => {
 
 for (const option of els.actionOptions) {
   option.addEventListener("click", () => {
+    if (option.dataset.action === "log") {
+      showLogView();
+      return;
+    }
     setCurrentAction(option);
   });
 }
+
+els.addLogToggle.addEventListener("click", () => {
+  if (els.addLogPanel.hidden) {
+    openAddLogPanel();
+  } else {
+    els.addLogPanel.hidden = true;
+  }
+});
+els.cancelAddLog.addEventListener("click", () => {
+  els.addLogPanel.hidden = true;
+});
+els.confirmAddLog.addEventListener("click", addCurrentFoodToLog);
+els.viewLogButton.addEventListener("click", showLogView);
+els.backToScanButton.addEventListener("click", showScannerView);
+els.logDateInput.addEventListener("change", () => {
+  logStore.selectedDate = els.logDateInput.value || localDateKey();
+  saveLogStore();
+  renderLogView();
+});
 
 els.railOpacityInput.addEventListener("input", updateRailOpacity);
 els.cardBgInput.addEventListener("input", updateCardBackground);
@@ -1417,4 +1789,5 @@ document.addEventListener("click", (event) => {
 });
 updateRailOpacity();
 updateCardBackground();
+renderLogTargetDate();
 requestAnimationFrame(() => window.scrollTo(0, 0));

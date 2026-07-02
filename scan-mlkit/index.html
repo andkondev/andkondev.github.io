@@ -59,6 +59,12 @@
               </svg>
               <span>Search</span>
             </button>
+            <button class="action-option" type="button" data-action="log" data-label="View Log">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M7 5h11M7 12h11M7 19h11M4 5h.01M4 12h.01M4 19h.01" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+              </svg>
+              <span>View Log</span>
+            </button>
           </div>
         </div>
         <div class="status sr-only" id="status" aria-live="polite"></div>
@@ -105,6 +111,55 @@
           <span id="serving">--</span>
           <span id="imageInfo">--</span>
         </div>
+      </section>
+
+      <section class="entry-actions" id="entryActions" aria-label="Food log actions">
+        <button class="add-log-toggle" id="addLogToggle" type="button" disabled>
+          <span>Add to</span>
+          <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M8 7h8M8 11h8M8 15h5M6 3h12a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zM16 16l4 4M20 16v4h-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
+        <button class="view-log-button" id="viewLogButton" type="button">View Log</button>
+      </section>
+
+      <section class="add-log-panel" id="addLogPanel" hidden>
+        <div class="add-log-line">
+          <span>Add</span>
+          <input id="logAmountInput" type="number" min="0" step="0.1" inputmode="decimal" value="1" />
+          <select id="logServingSelect" aria-label="Serving size"></select>
+          <span>of</span>
+          <strong id="logFoodTitle">No food selected</strong>
+        </div>
+        <div class="add-log-target">to <span id="logTargetDate">today</span></div>
+        <div class="add-log-buttons">
+          <button class="primary" id="confirmAddLog" type="button">Add</button>
+          <button id="cancelAddLog" type="button">Cancel</button>
+        </div>
+      </section>
+
+      <section class="log-view" id="logView" hidden>
+        <div class="log-view-header">
+          <button id="backToScanButton" type="button">Back</button>
+          <label class="log-date-control">
+            <span>Day</span>
+            <input id="logDateInput" type="date" />
+          </label>
+        </div>
+        <div class="log-summary">
+          <div class="log-summary-card">
+            <span>Protein percentage</span>
+            <strong id="dayProteinPercent">--</strong>
+            <small>% calories from protein</small>
+          </div>
+          <div class="log-summary-card">
+            <span>Energy density</span>
+            <strong id="dayEnergyDensity">--</strong>
+            <small>kcal/g</small>
+          </div>
+        </div>
+        <div class="log-note" id="logNote"></div>
+        <div class="log-entries" id="logEntries"></div>
       </section>
 
       <section class="output">
