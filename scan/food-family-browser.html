@@ -1,0 +1,591 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Food Family Browser</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f5f2ea;
+        --surface: #fffdf8;
+        --surface-2: #f8f4ec;
+        --ink: #101820;
+        --muted: #68717b;
+        --line: #d8d1c4;
+        --primary: #0f7464;
+        --primary-soft: rgba(15, 116, 100, 0.1);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+      }
+
+      main {
+        width: min(1180px, 100%);
+        margin: 0 auto;
+        padding: 22px;
+      }
+
+      header {
+        display: grid;
+        gap: 10px;
+        margin-bottom: 16px;
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+        letter-spacing: 0;
+      }
+
+      h1 {
+        font-size: clamp(30px, 5vw, 54px);
+        line-height: 1;
+      }
+
+      .subhead {
+        max-width: 760px;
+        color: var(--muted);
+        line-height: 1.45;
+      }
+
+      .toolbar {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        display: grid;
+        grid-template-columns: minmax(0, 1.3fr) minmax(180px, 0.6fr) minmax(180px, 0.6fr);
+        gap: 8px;
+        margin: 16px 0;
+        padding: 10px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 253, 248, 0.94);
+        backdrop-filter: blur(12px);
+        box-shadow: 0 12px 30px rgba(16, 24, 32, 0.08);
+      }
+
+      input,
+      select {
+        width: 100%;
+        min-height: 46px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 0 12px;
+        background: var(--surface);
+        color: var(--ink);
+        font: inherit;
+        font-weight: 680;
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
+        margin-bottom: 16px;
+      }
+
+      .stat {
+        min-width: 0;
+        display: grid;
+        gap: 3px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 12px;
+        background: var(--surface);
+      }
+
+      .stat span {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 760;
+        text-transform: uppercase;
+      }
+
+      .stat strong {
+        font-size: 28px;
+        line-height: 1;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 260px minmax(0, 1fr);
+        gap: 14px;
+        align-items: start;
+      }
+
+      .sidebar {
+        position: sticky;
+        top: 88px;
+        display: grid;
+        gap: 10px;
+      }
+
+      .panel,
+      .results,
+      details.family {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+        overflow: hidden;
+      }
+
+      .panel h2,
+      .results-head {
+        padding: 12px;
+        border-bottom: 1px solid var(--line);
+        background: rgba(255, 253, 248, 0.84);
+      }
+
+      .panel-list {
+        display: grid;
+        max-height: 460px;
+        overflow: auto;
+      }
+
+      .panel-button {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 8px;
+        width: 100%;
+        border: 0;
+        border-bottom: 1px solid var(--line);
+        padding: 10px 12px;
+        background: transparent;
+        color: var(--ink);
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .panel-button:last-child {
+        border-bottom: 0;
+      }
+
+      .panel-button:hover,
+      .panel-button.active {
+        background: var(--primary-soft);
+      }
+
+      .panel-button span {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .panel-button small,
+      .meta,
+      .muted {
+        color: var(--muted);
+      }
+
+      .results {
+        display: grid;
+      }
+
+      .results-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .families {
+        display: grid;
+        gap: 10px;
+        padding: 10px;
+      }
+
+      details.family summary {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 12px;
+        padding: 12px;
+        cursor: pointer;
+        font-weight: 820;
+      }
+
+      details.family summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .family-count {
+        color: var(--muted);
+        font-weight: 760;
+      }
+
+      .item-list {
+        display: grid;
+        border-top: 1px solid var(--line);
+      }
+
+      .food-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        gap: 12px;
+        align-items: center;
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .food-row:last-child {
+        border-bottom: 0;
+      }
+
+      .food-name {
+        min-width: 0;
+        font-weight: 760;
+        overflow-wrap: anywhere;
+      }
+
+      .metric {
+        color: var(--muted);
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+      }
+
+      .empty {
+        padding: 18px;
+        color: var(--muted);
+      }
+
+      @media (max-width: 780px) {
+        main {
+          padding: 14px;
+        }
+
+        .toolbar,
+        .stats,
+        .layout,
+        .food-row {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          position: static;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Food Family Browser</h1>
+        <div class="subhead">
+          A quick taxonomy view of the current generic food JSON. Families are derived heuristically from USDA category, animal/form fields, aliases, and food names, so this is a planning tool for image coverage rather than a final ontology.
+        </div>
+      </header>
+
+      <section class="toolbar" aria-label="Filters">
+        <input id="searchInput" type="search" autocomplete="off" placeholder="Search name, family, category, token, alias..." />
+        <select id="categorySelect" aria-label="Category"></select>
+        <select id="familySelect" aria-label="Food family"></select>
+      </section>
+
+      <section class="stats" aria-label="Summary">
+        <div class="stat"><span>Rows</span><strong id="rowCount">--</strong></div>
+        <div class="stat"><span>Categories</span><strong id="categoryCount">--</strong></div>
+        <div class="stat"><span>Families</span><strong id="familyCount">--</strong></div>
+        <div class="stat"><span>Shown</span><strong id="shownCount">--</strong></div>
+      </section>
+
+      <section class="layout">
+        <aside class="sidebar">
+          <section class="panel">
+            <h2>Categories</h2>
+            <div class="panel-list" id="categoryList"></div>
+          </section>
+          <section class="panel">
+            <h2>Top Families</h2>
+            <div class="panel-list" id="familyList"></div>
+          </section>
+        </aside>
+
+        <section class="results">
+          <div class="results-head">
+            <h2>Entries</h2>
+            <span class="muted" id="resultNote">Loading...</span>
+          </div>
+          <div class="families" id="families"></div>
+        </section>
+      </section>
+    </main>
+
+    <script>
+      const els = {
+        searchInput: document.getElementById("searchInput"),
+        categorySelect: document.getElementById("categorySelect"),
+        familySelect: document.getElementById("familySelect"),
+        rowCount: document.getElementById("rowCount"),
+        categoryCount: document.getElementById("categoryCount"),
+        familyCount: document.getElementById("familyCount"),
+        shownCount: document.getElementById("shownCount"),
+        categoryList: document.getElementById("categoryList"),
+        familyList: document.getElementById("familyList"),
+        families: document.getElementById("families"),
+        resultNote: document.getElementById("resultNote"),
+      };
+
+      let foods = [];
+      let enrichedFoods = [];
+
+      function normalize(value) {
+        return String(value || "")
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+      }
+
+      function titleCase(value) {
+        return String(value || "")
+          .split(/\s+/)
+          .filter(Boolean)
+          .map((word) => word.length <= 3 && /^[A-Z]+$/.test(word)
+            ? word
+            : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+          .join(" ");
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          "\"": "&quot;",
+          "'": "&#39;",
+        })[char]);
+      }
+
+      function firstCommaName(food) {
+        return String(food.name || "").split(",")[0].trim();
+      }
+
+      function firstUsefulAlias(food) {
+        const aliases = food.aliases || [];
+        return aliases.find((alias) => alias && !/^(beef|pork|chicken|turkey|fish|vegetable|fruit|beans)$/i.test(alias)) || "";
+      }
+
+      function meatFamily(food) {
+        const animal = titleCase(food.animal || firstCommaName(food) || food.category.replace(/ Products$/, ""));
+        const name = normalize(food.name);
+        const form = food.form || "";
+        const cuts = [
+          "ground", "tenderloin", "ribeye", "sirloin", "brisket", "chuck", "round",
+          "loin", "flank", "short loin", "porterhouse", "t-bone", "breast", "thigh",
+          "wing", "drumstick", "ribs", "roast", "steak", "chop", "bacon", "sausage",
+          "ham", "liver", "shoulder", "leg",
+        ];
+        const cut = form || cuts.find((item) => name.includes(item)) || "other";
+        return `${animal} - ${titleCase(cut)}`;
+      }
+
+      function seafoodFamily(food) {
+        const name = normalize(food.name);
+        const species = [
+          "salmon", "tuna", "sardine", "anchovies", "cod", "trout", "shrimp", "crab",
+          "lobster", "clam", "oyster", "mussel", "scallop", "tilapia", "catfish",
+          "halibut", "haddock", "pollock", "snapper", "flounder", "swordfish",
+        ].find((item) => name.includes(item));
+        return `Seafood - ${titleCase(species || firstCommaName(food) || "Other")}`;
+      }
+
+      function produceFamily(food) {
+        const alias = firstUsefulAlias(food);
+        const base = alias || firstCommaName(food);
+        return titleCase(base || "Produce");
+      }
+
+      function grainFamily(food) {
+        const name = normalize(food.name);
+        const family = ["flour", "rice", "pasta", "cornmeal", "oats", "barley", "quinoa", "wheat", "cereal"]
+          .find((item) => name.includes(item));
+        return titleCase(family || firstCommaName(food) || "Grains");
+      }
+
+      function dairyFamily(food) {
+        const name = normalize(food.name);
+        const family = ["milk", "cheese", "yogurt", "cream", "egg", "butter", "whey"]
+          .find((item) => name.includes(item));
+        return titleCase(family || firstCommaName(food) || "Dairy");
+      }
+
+      function ingredientFamily(food) {
+        const name = normalize(food.name);
+        const family = [
+          "oil", "vinegar", "spices", "salt", "sugar", "syrup", "honey", "molasses",
+          "flour", "starch", "gelatin", "yeast", "baking powder", "baking soda",
+          "vanilla", "cocoa", "sauce", "broth",
+        ].find((item) => name.includes(item));
+        return titleCase(family || firstCommaName(food) || food.category.replace(/ Products$/, ""));
+      }
+
+      function foodFamily(food) {
+        const category = food.category || "Other";
+        if (food.animal || /(Beef|Pork|Poultry|Lamb|Veal|Game) Products/.test(category)) return meatFamily(food);
+        if (category === "Finfish and Shellfish Products") return seafoodFamily(food);
+        if (category === "Fruits and Fruit Juices" || category === "Vegetables and Vegetable Products") return produceFamily(food);
+        if (category === "Legumes and Legume Products") return titleCase(firstUsefulAlias(food) || firstCommaName(food) || "Legumes");
+        if (category === "Cereal Grains and Pasta") return grainFamily(food);
+        if (category === "Dairy and Egg Products") return dairyFamily(food);
+        if (["Fats and Oils", "Spices and Herbs", "Sweets", "Soups, Sauces, and Gravies", "Baked Products"].includes(category)) return ingredientFamily(food);
+        if (category === "Nut and Seed Products") return titleCase(firstUsefulAlias(food) || firstCommaName(food) || "Nuts and Seeds");
+        return titleCase(firstCommaName(food) || category);
+      }
+
+      function countBy(rows, key) {
+        const map = new Map();
+        for (const row of rows) map.set(row[key], (map.get(row[key]) || 0) + 1);
+        return [...map.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+      }
+
+      function optionHtml(label, value = label) {
+        return `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`;
+      }
+
+      function buttonHtml(label, count, type) {
+        return `<button class="panel-button" type="button" data-${type}="${escapeHtml(label)}"><span>${escapeHtml(label)}</span><small>${escapeHtml(count)}</small></button>`;
+      }
+
+      function metric(value, digits) {
+        return Number.isFinite(value) ? value.toFixed(digits) : "--";
+      }
+
+      function filteredRows() {
+        const query = normalize(els.searchInput.value);
+        const category = els.categorySelect.value;
+        const family = els.familySelect.value;
+        const queryTokens = query.split(" ").filter(Boolean);
+        return enrichedFoods.filter((food) => {
+          if (category && food.category !== category) return false;
+          if (family && food.family !== family) return false;
+          if (!queryTokens.length) return true;
+          return queryTokens.every((token) => food.searchText.includes(token));
+        });
+      }
+
+      function render() {
+        const rows = filteredRows();
+        els.shownCount.textContent = rows.length.toLocaleString();
+        els.resultNote.textContent = `${rows.length.toLocaleString()} of ${enrichedFoods.length.toLocaleString()} rows shown`;
+
+        for (const button of els.categoryList.querySelectorAll("button")) {
+          button.classList.toggle("active", button.dataset.category === els.categorySelect.value);
+        }
+        for (const button of els.familyList.querySelectorAll("button")) {
+          button.classList.toggle("active", button.dataset.family === els.familySelect.value);
+        }
+
+        if (!rows.length) {
+          els.families.innerHTML = `<div class="empty">No rows match the current filters.</div>`;
+          return;
+        }
+
+        const groups = new Map();
+        for (const food of rows) {
+          const key = `${food.category}||${food.family}`;
+          if (!groups.has(key)) groups.set(key, []);
+          groups.get(key).push(food);
+        }
+
+        const sortedGroups = [...groups.entries()].sort((a, b) => {
+          const [aCategory, aFamily] = a[0].split("||");
+          const [bCategory, bFamily] = b[0].split("||");
+          return aCategory.localeCompare(bCategory) || aFamily.localeCompare(bFamily);
+        });
+
+        els.families.innerHTML = sortedGroups.map(([key, items], index) => {
+          const [category, family] = key.split("||");
+          const open = index < 8 ? " open" : "";
+          return `
+            <details class="family"${open}>
+              <summary>
+                <span>${escapeHtml(family)}<br><span class="meta">${escapeHtml(category)}</span></span>
+                <span class="family-count">${items.length}</span>
+              </summary>
+              <div class="item-list">
+                ${items.sort((a, b) => a.name.localeCompare(b.name)).map((food) => `
+                  <div class="food-row">
+                    <div>
+                      <div class="food-name">${escapeHtml(food.name)}</div>
+                      <div class="meta">${escapeHtml(food.dataType || "")} ${food.id ? `- FDC ${escapeHtml(food.id)}` : ""}</div>
+                    </div>
+                    <div class="metric">${metric(food.proteinPct, 1)}% protein</div>
+                    <div class="metric">${metric(food.energyDensity, 2)} kcal/g</div>
+                  </div>
+                `).join("")}
+              </div>
+            </details>
+          `;
+        }).join("");
+      }
+
+      function populateControls() {
+        const categoryCounts = countBy(enrichedFoods, "category");
+        const familyCounts = countBy(enrichedFoods, "family");
+        els.categorySelect.innerHTML = optionHtml("All categories", "") + categoryCounts.map(([name, count]) => optionHtml(`${name} (${count})`, name)).join("");
+        els.familySelect.innerHTML = optionHtml("All families", "") + familyCounts.map(([name, count]) => optionHtml(`${name} (${count})`, name)).join("");
+        els.categoryList.innerHTML = buttonHtml("All categories", "", "category") + categoryCounts.map(([name, count]) => buttonHtml(name, count, "category")).join("");
+        els.familyList.innerHTML = buttonHtml("All families", "", "family") + familyCounts.slice(0, 80).map(([name, count]) => buttonHtml(name, count, "family")).join("");
+      }
+
+      async function boot() {
+        const response = await fetch("data/whole-foods-usda.json");
+        if (!response.ok) throw new Error(`Could not load food data: ${response.status}`);
+        const data = await response.json();
+        foods = data.foods || [];
+        enrichedFoods = foods.map((food) => {
+          const family = foodFamily(food);
+          const searchText = normalize([
+            food.name,
+            food.category,
+            family,
+            (food.aliases || []).join(" "),
+            (food.tokens || []).join(" "),
+            food.animal,
+            food.form,
+            food.state,
+          ].join(" "));
+          return { ...food, family, searchText };
+        });
+
+        els.rowCount.textContent = enrichedFoods.length.toLocaleString();
+        els.categoryCount.textContent = new Set(enrichedFoods.map((food) => food.category)).size.toLocaleString();
+        els.familyCount.textContent = new Set(enrichedFoods.map((food) => food.family)).size.toLocaleString();
+        populateControls();
+        render();
+      }
+
+      els.searchInput.addEventListener("input", render);
+      els.categorySelect.addEventListener("change", render);
+      els.familySelect.addEventListener("change", render);
+      els.categoryList.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-category]");
+        if (!button) return;
+        els.categorySelect.value = button.dataset.category === "All categories" ? "" : button.dataset.category;
+        render();
+      });
+      els.familyList.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-family]");
+        if (!button) return;
+        els.familySelect.value = button.dataset.family === "All families" ? "" : button.dataset.family;
+        render();
+      });
+
+      boot().catch((error) => {
+        els.resultNote.textContent = error.message;
+        els.families.innerHTML = `<div class="empty">${error.message}</div>`;
+      });
+    </script>
+  </body>
+</html>
