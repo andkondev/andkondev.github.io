@@ -644,6 +644,19 @@ function searchTokens(value) {
     .filter((token) => token.length > 1 && !QUERY_STOP_WORDS.has(token));
 }
 
+function searchTextMatches(text, query) {
+  const normalizedText = normalizeSearchText(text);
+  const normalizedQuery = normalizeSearchText(query);
+  if (!normalizedText || !normalizedQuery) return false;
+  if (normalizedText === normalizedQuery) return true;
+  if (normalizedQuery.includes(" ")) {
+    return ` ${normalizedText} `.includes(` ${normalizedQuery} `);
+  }
+  return normalizedText
+    .split(" ")
+    .some((word) => word === normalizedQuery || (normalizedQuery.length >= 5 && word.startsWith(normalizedQuery)));
+}
+
 function findKnownTerm(text, terms) {
   return terms.find((term) => new RegExp(`\\b${term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`).test(text)) || "";
 }
@@ -1068,7 +1081,7 @@ function scoreMeatFood(food, query) {
     hasMatch = true;
     strongMatch = true;
   }
-  if (name.includes(query.normalized)) {
+  if (searchTextMatches(name, query.normalized)) {
     score += 70;
     hasMatch = true;
     strongMatch = true;
@@ -1078,7 +1091,7 @@ function scoreMeatFood(food, query) {
     hasMatch = true;
     strongMatch = true;
   }
-  if (aliases.some((alias) => normalizeSearchText(alias).includes(query.normalized))) {
+  if (aliases.some((alias) => searchTextMatches(alias, query.normalized))) {
     score += 70;
     hasMatch = true;
     strongMatch = true;
@@ -1137,7 +1150,7 @@ function scoreMeatFood(food, query) {
       score += 12;
       hasMatch = true;
       matchedTokens += 1;
-    } else if (name.includes(token)) {
+    } else if (searchTextMatches(name, token)) {
       score += 7;
       hasMatch = true;
       matchedTokens += 1;
