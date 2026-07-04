@@ -766,6 +766,18 @@
                         top: 360
                     },
                     windowId: "orbit"
+                },
+                {
+                    id: "voice-recorder",
+                    icon: "assets/voice-recorder-icon.png",
+                    label: "Andkon Voice Recorder",
+                    openInNewTab: true,
+                    position: {
+                        left: 0,
+                        top: 450
+                    },
+                    showInWelcome: false,
+                    url: "https://andkon.dev/voicerecorder/"
                 }
             ];
             let icons = [];
@@ -868,7 +880,7 @@
 
                 projects.forEach(function (project) {
                     desktopIconFragment.appendChild(createProjectIcon(project));
-                    if (project.launchMode !== "window") {
+                    if (project.launchMode !== "window" && project.showInWelcome !== false) {
                         windowActionFragment.appendChild(createWindowAction(project));
                     }
                 });
