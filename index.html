@@ -125,6 +125,7 @@
             position: absolute;
             left: 0;
             top: 0;
+            text-decoration: none;
             touch-action: none;
             user-select: none;
             width: 80px;
@@ -663,8 +664,11 @@
             const orbitTaskButton = document.querySelectorAll(".task-button")[1];
             const clock = document.getElementById("clock");
             const iconLaneGap = 24;
+            const iconColumnWidth = 96;
+            const iconRowHeight = 90;
             const minimumVisibleWindow = 120;
             const startupWindowTopOffset = 38;
+            const welcomeActionLimit = 2;
             let topWindowZIndex = 3;
 
             function isNarrowViewport() {
@@ -794,7 +798,9 @@
             let icons = [];
 
             function createProjectIcon(project) {
-                const button = document.createElement("button");
+                const launchMode = project.launchMode || "link";
+                const usesNativeLink = launchMode === "link" && project.url;
+                const button = document.createElement(usesNativeLink ? "a" : "button");
                 const frame = document.createElement("span");
                 const image = document.createElement("img");
                 const label = document.createElement("span");
@@ -803,13 +809,22 @@
                 button.dataset.projectId = project.id;
                 button.dataset.target = project.url;
                 button.dataset.targetBlank = String(project.openInNewTab);
-                button.dataset.launchMode = project.launchMode || "link";
+                button.dataset.launchMode = launchMode;
                 if (project.windowId) {
                     button.dataset.windowId = project.windowId;
                 }
                 button.style.left = project.position.left + "px";
                 button.style.top = project.position.top + "px";
-                button.type = "button";
+
+                if (usesNativeLink) {
+                    button.href = project.url;
+                    if (project.openInNewTab) {
+                        button.rel = "noopener noreferrer";
+                        button.target = "_blank";
+                    }
+                } else {
+                    button.type = "button";
+                }
 
                 frame.className = "icon-frame";
                 frame.setAttribute("aria-hidden", "true");
@@ -844,7 +859,7 @@
             }
 
             function createGithubShortcut() {
-                const button = document.createElement("button");
+                const button = document.createElement("a");
                 const frame = document.createElement("span");
                 const image = createGithubMark();
                 const label = document.createElement("span");
@@ -853,8 +868,11 @@
                 button.dataset.projectId = githubShortcut.id;
                 button.dataset.target = githubShortcut.url;
                 button.dataset.targetBlank = String(githubShortcut.openInNewTab);
+                button.dataset.launchMode = "link";
                 button.setAttribute("aria-label", "Open /andkondev on GitHub");
-                button.type = "button";
+                button.href = githubShortcut.url;
+                button.rel = "noopener noreferrer";
+                button.target = "_blank";
 
                 frame.className = "icon-frame";
                 frame.setAttribute("aria-hidden", "true");
@@ -888,11 +906,17 @@
             function renderProjects() {
                 const desktopIconFragment = document.createDocumentFragment();
                 const windowActionFragment = document.createDocumentFragment();
+                let windowActionCount = 0;
 
                 projects.forEach(function (project) {
                     desktopIconFragment.appendChild(createProjectIcon(project));
-                    if (project.launchMode !== "window" && project.showInWelcome !== false) {
+                    if (
+                        project.launchMode !== "window"
+                        && project.showInWelcome !== false
+                        && windowActionCount < welcomeActionLimit
+                    ) {
                         windowActionFragment.appendChild(createWindowAction(project));
+                        windowActionCount += 1;
                     }
                 });
                 desktopIconFragment.appendChild(createGithubShortcut());
@@ -904,6 +928,36 @@
 
             renderProjects();
 
+            function getRegularIcons() {
+                return icons.filter(function (icon) {
+                    return !icon.classList.contains("pinned-shortcut");
+                });
+            }
+
+            function layoutDesktopIcons() {
+                const regularIcons = getRegularIcons();
+
+                if (!regularIcons.length) {
+                    return;
+                }
+
+                const maxIconHeight = regularIcons.reduce(function (maxHeight, icon) {
+                    return Math.max(maxHeight, icon.offsetHeight);
+                }, 0) || 74;
+                const rowSlack = Math.max(0, iconRowHeight - maxIconHeight);
+                const rowsPerColumn = Math.max(1, Math.floor((desktopIcons.clientHeight + rowSlack) / iconRowHeight));
+
+                regularIcons.forEach(function (icon, index) {
+                    const column = Math.floor(index / rowsPerColumn);
+                    const row = index % rowsPerColumn;
+
+                    icon.style.left = column * iconColumnWidth + "px";
+                    icon.style.top = row * iconRowHeight + "px";
+                });
+            }
+
+            layoutDesktopIcons();
+
             function clamp(value, min, max) {
                 return Math.min(Math.max(value, min), max);
             }
@@ -913,11 +967,15 @@
             }
 
             function getIconLaneRight() {
-                return icons.filter(function (icon) {
-                    return !icon.classList.contains("pinned-shortcut");
-                }).reduce(function (maxRight, icon) {
-                    return Math.max(maxRight, desktopIcons.offsetLeft + icon.offsetLeft + icon.offsetWidth);
-                }, desktopIcons.offsetLeft);
+                const firstColumnIcon = getRegularIcons().find(function (icon) {
+                    return icon.offsetLeft === 0;
+                });
+
+                if (!firstColumnIcon) {
+                    return desktopIcons.offsetLeft;
+                }
+
+                return desktopIcons.offsetLeft + firstColumnIcon.offsetLeft + firstColumnIcon.offsetWidth;
             }
 
             function suppressNextClick(element) {
@@ -1129,19 +1187,27 @@
                     }
                 });
 
-                icon.addEventListener("click", function () {
+                icon.addEventListener("click", function (event) {
                     if (icon.dataset.justDragged === "true") {
+                        event.preventDefault();
                         return;
                     }
 
+                    if (icon.tagName === "A" && (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey)) {
+                        return;
+                    }
+
+                    event.preventDefault();
                     selectIcon(icon);
                 });
 
-                icon.addEventListener("dblclick", function () {
+                icon.addEventListener("dblclick", function (event) {
                     if (icon.dataset.justDragged === "true") {
+                        event.preventDefault();
                         return;
                     }
 
+                    event.preventDefault();
                     openIcon(icon);
                 });
 
@@ -1494,6 +1560,7 @@
             window.setInterval(updateClock, 30000);
             window.addEventListener("resize", function () {
                 applyPixelScale();
+                layoutDesktopIcons();
                 welcomeWindowController.handleResize();
                 orbitWindowController.handleResize();
             });
