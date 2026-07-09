@@ -86,8 +86,10 @@
         }
 
         .desktop {
+            isolation: isolate;
             overflow: clip;
             position: relative;
+            z-index: 0;
             min-height: 100vh;
             min-height: 100svh;
             min-height: 100dvh;
@@ -430,6 +432,14 @@
             z-index: 10;
         }
 
+        .start-shell {
+            align-items: center;
+            display: flex;
+            flex: 0 0 auto;
+            height: 22px;
+            position: relative;
+        }
+
         .start-button,
         .task-button,
         .tray-clock {
@@ -445,10 +455,35 @@
         }
 
         .start-button {
+            appearance: none;
+            color: inherit;
+            cursor: default;
             gap: 4px;
             min-width: 54px;
             padding: 0 7px 0 5px;
             font-weight: bold;
+            position: relative;
+        }
+
+        .start-button:focus {
+            outline: none;
+        }
+
+        .start-button:focus-visible::after {
+            border: 1px dotted #000000;
+            content: "";
+            inset: 3px;
+            pointer-events: none;
+            position: absolute;
+        }
+
+        .start-button[aria-expanded="true"],
+        .start-button:active {
+            border-top-color: var(--shadow-dark);
+            border-left-color: var(--shadow-dark);
+            border-right-color: var(--white);
+            border-bottom-color: var(--white);
+            padding: 1px 6px 0 6px;
         }
 
         .task-button {
@@ -507,6 +542,457 @@
         .start-icon {
             width: 16px;
             height: 16px;
+        }
+
+        .start-menu {
+            --submenu-top: 49px;
+            background: var(--surface);
+            bottom: calc(100% - 1px);
+            box-shadow: var(--border-window-outer), var(--border-window-inner);
+            display: grid;
+            grid-template-columns: 30px minmax(0, 228px);
+            left: -2px;
+            padding: 3px;
+            position: absolute;
+            width: 264px;
+            z-index: 2;
+        }
+
+        .start-brand-rail {
+            align-items: flex-end;
+            background: linear-gradient(to top, var(--title-active-light), var(--title-active));
+            color: var(--surface-light);
+            display: flex;
+            font-size: 17px;
+            line-height: 1;
+            margin-right: 3px;
+            min-height: 100%;
+            overflow: hidden;
+            padding: 7px 5px;
+            user-select: none;
+        }
+
+        .start-brand-rail span {
+            transform: rotate(180deg);
+            white-space: nowrap;
+            writing-mode: vertical-rl;
+        }
+
+        .start-brand-rail strong {
+            color: var(--white);
+            font-weight: bold;
+        }
+
+        .start-menu-content {
+            min-height: 0;
+            min-width: 0;
+            position: relative;
+        }
+
+        .start-menu-item {
+            appearance: none;
+            background: transparent;
+            border: 0;
+            color: inherit;
+            cursor: default;
+            display: grid;
+            grid-template-columns: 38px minmax(0, 1fr) 10px;
+            min-height: 40px;
+            padding: 2px 4px 2px 2px;
+            text-align: left;
+            text-decoration: none;
+            width: 100%;
+        }
+
+        .start-menu-item:hover,
+        .start-menu-item:focus,
+        .start-menu-item.is-active {
+            background: var(--selection);
+            color: var(--selection-text);
+            outline: none;
+        }
+
+        .start-menu-item-label {
+            align-self: center;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .start-menu-item-label u {
+            text-decoration-thickness: 1px;
+            text-underline-offset: 1px;
+        }
+
+        .start-menu-icon {
+            align-items: center;
+            align-self: center;
+            display: flex;
+            height: 34px;
+            justify-content: center;
+            position: relative;
+            width: 34px;
+        }
+
+        .start-menu-icon-image {
+            display: block;
+            height: 32px;
+            max-width: 32px;
+            object-fit: contain;
+            width: 32px;
+        }
+
+        .start-menu-arrow {
+            align-self: center;
+            border-bottom: 4px solid transparent;
+            border-left: 5px solid currentColor;
+            border-top: 4px solid transparent;
+            height: 0;
+            justify-self: end;
+            width: 0;
+        }
+
+        .start-menu-separator {
+            border-top: 1px solid var(--shadow);
+            border-bottom: 1px solid var(--white);
+            height: 2px;
+            margin: 4px 5px;
+        }
+
+        .pixel-folder-icon::before,
+        .pixel-folder-icon::after {
+            content: "";
+            position: absolute;
+        }
+
+        .pixel-folder-icon::before {
+            background: #f2dc58;
+            border: 1px solid #000000;
+            box-shadow:
+                inset 1px 1px #fff6a0,
+                inset -1px -1px #8b7a19;
+            height: 22px;
+            left: 3px;
+            top: 9px;
+            width: 29px;
+            z-index: 1;
+        }
+
+        .pixel-folder-icon::after {
+            background: #f2dc58;
+            border: 1px solid #000000;
+            border-bottom: 0;
+            height: 7px;
+            left: 5px;
+            top: 5px;
+            width: 14px;
+        }
+
+        .github-menu-icon::before {
+            align-items: center;
+            background: #ffffff;
+            border: 1px solid #000000;
+            box-shadow:
+                inset 1px 1px #dfdfdf,
+                2px 2px 0 var(--shadow);
+            color: #111111;
+            content: "GH";
+            display: flex;
+            font-size: 10px;
+            font-weight: bold;
+            height: 27px;
+            justify-content: center;
+            width: 27px;
+        }
+
+        .run-menu-icon::before,
+        .run-dialog-icon::before {
+            align-items: center;
+            background: #ffffff;
+            border: 2px solid #000080;
+            box-shadow: 2px 2px 0 var(--shadow);
+            color: #000000;
+            content: ">_";
+            display: flex;
+            font-family: "Courier New", monospace;
+            font-size: 11px;
+            font-weight: bold;
+            height: 25px;
+            justify-content: center;
+            width: 29px;
+        }
+
+        .shutdown-menu-icon::before,
+        .shutdown-dialog-icon::before {
+            background: #9bb7c7;
+            border: 2px solid #000000;
+            box-shadow:
+                inset 2px 2px #d7f2ff,
+                inset -2px -2px #40606f,
+                2px 2px 0 var(--shadow);
+            content: "";
+            height: 23px;
+            position: absolute;
+            top: 3px;
+            width: 29px;
+        }
+
+        .shutdown-menu-icon::after,
+        .shutdown-dialog-icon::after {
+            background: #000000;
+            bottom: 1px;
+            content: "";
+            height: 3px;
+            position: absolute;
+            width: 17px;
+        }
+
+        .start-submenu {
+            background: var(--surface);
+            box-shadow: var(--border-window-outer), var(--border-window-inner);
+            left: calc(100% - 3px);
+            max-height: min(420px, calc(100dvh - var(--taskbar-height) - 8px));
+            min-width: 252px;
+            overflow-y: auto;
+            padding: 3px;
+            position: absolute;
+            top: var(--submenu-top);
+            z-index: 3;
+        }
+
+        .start-project-item {
+            grid-template-columns: 24px minmax(0, 1fr) 0;
+            min-height: 28px;
+            padding: 2px 5px 2px 3px;
+        }
+
+        .start-project-icon {
+            align-items: center;
+            display: flex;
+            height: 20px;
+            justify-content: center;
+            width: 20px;
+        }
+
+        .start-project-icon img {
+            display: block;
+            height: 18px;
+            max-width: 18px;
+            object-fit: contain;
+            width: 18px;
+        }
+
+        .start-submenu-back {
+            display: none;
+        }
+
+        .shell-dialog-backdrop {
+            align-items: center;
+            background: rgba(0, 0, 0, 0.12);
+            display: flex;
+            inset: 0;
+            justify-content: center;
+            padding: 12px;
+            position: fixed;
+            z-index: 20;
+        }
+
+        .shell-dialog {
+            background: var(--surface);
+            box-shadow: var(--border-window-outer), var(--border-window-inner);
+            max-width: 100%;
+            padding: 3px;
+            width: 430px;
+        }
+
+        .shell-dialog .title-bar {
+            cursor: default;
+        }
+
+        .shell-dialog-body {
+            margin: 12px;
+        }
+
+        .run-dialog-copy,
+        .shutdown-dialog-copy {
+            align-items: flex-start;
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .run-dialog-copy p,
+        .shutdown-dialog-copy p {
+            margin: 2px 0 0;
+        }
+
+        .run-dialog-icon,
+        .shutdown-dialog-icon {
+            flex: 0 0 36px;
+            height: 36px;
+            position: relative;
+            width: 36px;
+        }
+
+        .run-dialog-icon::before {
+            height: 29px;
+            width: 34px;
+        }
+
+        .run-field-row {
+            align-items: center;
+            display: grid;
+            gap: 8px;
+            grid-template-columns: auto minmax(0, 1fr);
+            position: relative;
+        }
+
+        .run-combobox {
+            display: flex;
+            min-width: 0;
+            position: relative;
+        }
+
+        .run-command-input {
+            background: #ffffff;
+            border: 0;
+            box-shadow: var(--border-sunken-outer), var(--border-sunken-inner);
+            color: #000000;
+            height: 24px;
+            min-width: 0;
+            outline: none;
+            padding: 3px 25px 3px 5px;
+            width: 100%;
+        }
+
+        .run-command-input:focus {
+            outline: 1px dotted #000000;
+            outline-offset: -4px;
+        }
+
+        .run-dropdown-toggle {
+            appearance: none;
+            background: var(--surface);
+            border: 0;
+            box-shadow: var(--border-raised-outer), var(--border-raised-inner);
+            color: #000000;
+            cursor: default;
+            font-size: 9px;
+            height: 20px;
+            padding: 0;
+            position: absolute;
+            right: 2px;
+            top: 2px;
+            width: 20px;
+        }
+
+        .run-dropdown-toggle:active {
+            box-shadow: var(--border-sunken-outer), var(--border-sunken-inner);
+            padding: 1px 0 0 1px;
+        }
+
+        .run-project-list {
+            background: #ffffff;
+            border: 1px solid #000000;
+            box-shadow: 2px 2px 0 var(--shadow);
+            left: 0;
+            max-height: 190px;
+            overflow-y: auto;
+            position: absolute;
+            right: 0;
+            top: 24px;
+            z-index: 2;
+        }
+
+        .run-project-option {
+            appearance: none;
+            align-items: center;
+            background: #ffffff;
+            border: 0;
+            color: #000000;
+            cursor: default;
+            display: flex;
+            gap: 6px;
+            min-height: 25px;
+            padding: 3px 5px;
+            text-align: left;
+            width: 100%;
+        }
+
+        .run-project-option:hover,
+        .run-project-option.is-active {
+            background: var(--selection);
+            color: var(--selection-text);
+            outline: none;
+        }
+
+        .run-project-option img {
+            display: block;
+            height: 16px;
+            max-width: 16px;
+            object-fit: contain;
+            width: 16px;
+        }
+
+        .run-project-empty {
+            color: var(--shadow-dark);
+            padding: 6px;
+        }
+
+        .run-error {
+            color: #800000;
+            margin: 8px 0 0 49px;
+            min-height: 14px;
+        }
+
+        .shell-dialog-actions {
+            display: flex;
+            gap: 7px;
+            justify-content: flex-end;
+            margin-top: 14px;
+        }
+
+        .shell-dialog-button {
+            appearance: none;
+            border: 0;
+            color: var(--text);
+            cursor: default;
+            min-width: 78px;
+        }
+
+        .shutdown-dialog {
+            width: 390px;
+        }
+
+        .shutdown-screen {
+            align-items: center;
+            background: #000000;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            inset: 0;
+            justify-content: center;
+            padding: 24px;
+            position: fixed;
+            text-align: center;
+            z-index: 30;
+        }
+
+        .shutdown-screen-panel {
+            max-width: 520px;
+        }
+
+        .shutdown-screen-title {
+            color: #ff9b38;
+            font-size: clamp(24px, 7vw, 48px);
+            font-weight: bold;
+            margin: 0 0 18px;
+        }
+
+        .shutdown-screen p {
+            font-size: 14px;
+            margin: 0 0 22px;
         }
 
         .desktop-window-icon {
@@ -569,6 +1055,66 @@
         }
 
         @media (max-width: 520px) {
+            .start-menu {
+                grid-template-columns: 30px minmax(0, 1fr);
+                max-height: calc(100dvh - var(--taskbar-height) - 4px);
+                overflow: hidden;
+                width: min(300px, calc(100vw - 4px));
+            }
+
+            .start-menu-content {
+                max-height: calc(100dvh - var(--taskbar-height) - 10px);
+                overflow-y: auto;
+            }
+
+            .start-menu.submenu-open .start-menu-content {
+                visibility: hidden;
+            }
+
+            .start-submenu {
+                bottom: 3px;
+                left: 33px;
+                max-height: none;
+                min-width: 0;
+                right: 3px;
+                top: 3px;
+                width: auto;
+            }
+
+            .start-submenu-back {
+                display: grid;
+                grid-template-columns: 16px minmax(0, 1fr) 0;
+                min-height: 28px;
+            }
+
+            .start-submenu-back .start-menu-arrow {
+                border-left: 0;
+                border-right: 5px solid currentColor;
+                justify-self: start;
+            }
+
+            .shell-dialog-body {
+                margin: 10px;
+            }
+
+            .run-field-row {
+                align-items: stretch;
+                gap: 4px;
+                grid-template-columns: 1fr;
+            }
+
+            .run-error {
+                margin-left: 0;
+            }
+
+            .shell-dialog-actions {
+                flex-wrap: wrap;
+            }
+
+            .shell-dialog-button {
+                flex: 1 1 78px;
+            }
+
             .window-actions {
                 gap: 4px;
             }
@@ -608,7 +1154,7 @@
                     <ul>
                         <li>Double-click an icon to open a project.</li>
                         <li>Press <strong>Enter</strong> on a selected icon to launch it.</li>
-                        <li>The Start button is decorative for now.</li>
+                        <li>Open <strong>Start</strong> to browse every project or run one by name.</li>
                     </ul>
                     <div class="window-actions" id="window-actions"></div>
                 </div>
@@ -633,9 +1179,103 @@
         </main>
 
         <footer class="taskbar">
-            <div aria-hidden="true" class="start-button">
-                <img alt="" class="icon-asset start-icon" height="16" src="assets/start.svg" width="16">
-                <span>Start</span>
+            <div class="start-shell" id="start-shell">
+                <button
+                    aria-controls="start-menu"
+                    aria-expanded="false"
+                    aria-haspopup="menu"
+                    class="start-button"
+                    id="start-button"
+                    type="button"
+                >
+                    <img alt="" class="icon-asset start-icon" height="16" src="assets/start.svg" width="16">
+                    <span>Start</span>
+                </button>
+
+                <div aria-labelledby="start-button" class="start-menu" id="start-menu" role="menu" hidden>
+                    <div aria-hidden="true" class="start-brand-rail">
+                        <span><strong>AndkonOS</strong> 98</span>
+                    </div>
+
+                    <div class="start-menu-content" id="start-menu-content" role="none">
+                        <button class="start-menu-item" data-start-command="welcome" role="menuitem" tabindex="-1" type="button">
+                            <span class="start-menu-icon" aria-hidden="true">
+                                <img alt="" class="start-menu-icon-image" height="32" src="assets/andkondev-favicon.png" width="32">
+                            </span>
+                            <span class="start-menu-item-label"><u>W</u>elcome to Andkon.Dev</span>
+                            <span aria-hidden="true"></span>
+                        </button>
+
+                        <div class="start-menu-separator" role="separator"></div>
+
+                        <button
+                            aria-controls="projects-submenu"
+                            aria-expanded="false"
+                            aria-haspopup="menu"
+                            class="start-menu-item"
+                            data-start-submenu="projects"
+                            id="start-projects-item"
+                            role="menuitem"
+                            tabindex="-1"
+                            type="button"
+                        >
+                            <span aria-hidden="true" class="start-menu-icon pixel-folder-icon"></span>
+                            <span class="start-menu-item-label"><u>P</u>rojects</span>
+                            <span aria-hidden="true" class="start-menu-arrow"></span>
+                        </button>
+
+                        <a
+                            class="start-menu-item"
+                            data-start-command="github"
+                            href="https://github.com/andkondev"
+                            rel="noopener noreferrer"
+                            role="menuitem"
+                            tabindex="-1"
+                            target="_blank"
+                        >
+                            <span aria-hidden="true" class="start-menu-icon github-menu-icon"></span>
+                            <span class="start-menu-item-label"><u>G</u>itHub /andkondev</span>
+                            <span aria-hidden="true"></span>
+                        </a>
+
+                        <button
+                            aria-haspopup="dialog"
+                            class="start-menu-item"
+                            data-start-command="run"
+                            role="menuitem"
+                            tabindex="-1"
+                            type="button"
+                        >
+                            <span aria-hidden="true" class="start-menu-icon run-menu-icon"></span>
+                            <span class="start-menu-item-label"><u>R</u>un...</span>
+                            <span aria-hidden="true"></span>
+                        </button>
+
+                        <div class="start-menu-separator" role="separator"></div>
+
+                        <button
+                            aria-haspopup="dialog"
+                            class="start-menu-item"
+                            data-start-command="shutdown"
+                            role="menuitem"
+                            tabindex="-1"
+                            type="button"
+                        >
+                            <span aria-hidden="true" class="start-menu-icon shutdown-menu-icon"></span>
+                            <span class="start-menu-item-label"><u>S</u>hut Down...</span>
+                            <span aria-hidden="true"></span>
+                        </button>
+                    </div>
+
+                    <div aria-label="Projects" class="start-submenu" id="projects-submenu" role="menu" hidden>
+                        <button class="start-menu-item start-project-item start-submenu-back" role="menuitem" tabindex="-1" type="button">
+                            <span aria-hidden="true" class="start-menu-arrow"></span>
+                            <span class="start-menu-item-label">Back</span>
+                            <span aria-hidden="true"></span>
+                        </button>
+                        <div id="start-project-items" role="group"></div>
+                    </div>
+                </div>
             </div>
 
             <button aria-label="Welcome to andkon.dev window" class="task-button active" type="button">
@@ -649,11 +1289,107 @@
             <div class="taskbar-spacer"></div>
             <div aria-label="Current time" class="tray-clock" id="clock">12:00 PM</div>
         </footer>
+
+        <div class="shell-dialog-backdrop" id="run-dialog-backdrop" hidden>
+            <section
+                aria-describedby="run-dialog-description"
+                aria-labelledby="run-dialog-title"
+                aria-modal="true"
+                class="shell-dialog run-dialog"
+                role="dialog"
+            >
+                <div class="title-bar">
+                    <div class="title-bar-left">
+                        <img alt="" class="icon-asset desktop-window-icon" height="16" src="assets/welcome-window.svg" width="16">
+                        <span class="title-bar-text" id="run-dialog-title">Run</span>
+                    </div>
+                    <div class="title-bar-controls">
+                        <button aria-label="Close Run" class="title-button close" id="run-dialog-close" type="button"></button>
+                    </div>
+                </div>
+
+                <form class="shell-dialog-body" id="run-form" novalidate>
+                    <div class="run-dialog-copy">
+                        <span aria-hidden="true" class="run-dialog-icon"></span>
+                        <p id="run-dialog-description">Type a project name, or choose one from the list, and AndkonOS will open it for you.</p>
+                    </div>
+
+                    <div class="run-field-row">
+                        <label for="run-command-input">Open:</label>
+                        <div class="run-combobox">
+                            <input
+                                aria-autocomplete="list"
+                                aria-controls="run-project-list"
+                                aria-expanded="false"
+                                autocomplete="off"
+                                class="run-command-input"
+                                id="run-command-input"
+                                role="combobox"
+                                spellcheck="false"
+                                type="text"
+                            >
+                            <button aria-label="Show all projects" class="run-dropdown-toggle" id="run-dropdown-toggle" type="button">▼</button>
+                            <div aria-label="Existing projects" class="run-project-list" id="run-project-list" role="listbox" hidden></div>
+                        </div>
+                    </div>
+
+                    <p class="run-error" id="run-error" role="alert" hidden></p>
+
+                    <div class="shell-dialog-actions">
+                        <button class="win-button shell-dialog-button" type="submit"><span class="win-button-label">OK</span></button>
+                        <button class="win-button shell-dialog-button" id="run-cancel" type="button"><span class="win-button-label">Cancel</span></button>
+                        <button class="win-button shell-dialog-button" id="run-browse" type="button"><span class="win-button-label">Browse...</span></button>
+                    </div>
+                </form>
+            </section>
+        </div>
+
+        <div class="shell-dialog-backdrop" id="shutdown-dialog-backdrop" hidden>
+            <section
+                aria-describedby="shutdown-dialog-description"
+                aria-labelledby="shutdown-dialog-title"
+                aria-modal="true"
+                class="shell-dialog shutdown-dialog"
+                role="dialog"
+            >
+                <div class="title-bar">
+                    <div class="title-bar-left">
+                        <img alt="" class="icon-asset desktop-window-icon" height="16" src="assets/welcome-window.svg" width="16">
+                        <span class="title-bar-text" id="shutdown-dialog-title">Shut Down AndkonOS</span>
+                    </div>
+                    <div class="title-bar-controls">
+                        <button aria-label="Close Shut Down" class="title-button close" id="shutdown-dialog-close" type="button"></button>
+                    </div>
+                </div>
+
+                <div class="shell-dialog-body">
+                    <div class="shutdown-dialog-copy">
+                        <span aria-hidden="true" class="shutdown-dialog-icon"></span>
+                        <p id="shutdown-dialog-description">Are you sure you want to shut down AndkonOS? You can restart it without leaving this tab.</p>
+                    </div>
+
+                    <div class="shell-dialog-actions">
+                        <button class="win-button shell-dialog-button" id="shutdown-confirm" type="button"><span class="win-button-label">Shut Down</span></button>
+                        <button class="win-button shell-dialog-button" id="shutdown-restart" type="button"><span class="win-button-label">Restart</span></button>
+                        <button class="win-button shell-dialog-button" id="shutdown-cancel" type="button"><span class="win-button-label">Cancel</span></button>
+                    </div>
+                </div>
+            </section>
+        </div>
     </div>
+
+    <section aria-labelledby="shutdown-screen-title" aria-modal="true" class="shutdown-screen" id="shutdown-screen" role="dialog" hidden>
+        <div class="shutdown-screen-panel">
+            <h1 class="shutdown-screen-title" id="shutdown-screen-title">AndkonOS 98</h1>
+            <p>It is now safe to close this tab.</p>
+            <button class="win-button shell-dialog-button" id="shutdown-screen-restart" type="button"><span class="win-button-label">Restart AndkonOS</span></button>
+        </div>
+    </section>
 
     <script>
         (function () {
             const root = document.documentElement;
+            const pixelStage = document.querySelector(".pixel-stage");
             const desktop = document.querySelector(".desktop");
             const desktopIcons = document.getElementById("desktop-icons");
             const windowActions = document.getElementById("window-actions");
@@ -663,6 +1399,36 @@
             const taskButton = document.querySelector(".task-button");
             const orbitTaskButton = document.querySelectorAll(".task-button")[1];
             const clock = document.getElementById("clock");
+            const startShell = document.getElementById("start-shell");
+            const startButton = document.getElementById("start-button");
+            const startMenu = document.getElementById("start-menu");
+            const startMenuContent = document.getElementById("start-menu-content");
+            const startProjectsItem = document.getElementById("start-projects-item");
+            const projectsSubmenu = document.getElementById("projects-submenu");
+            const startProjectItems = document.getElementById("start-project-items");
+            const startWelcomeItem = startMenu.querySelector('[data-start-command="welcome"]');
+            const startGithubItem = startMenu.querySelector('[data-start-command="github"]');
+            const startRunItem = startMenu.querySelector('[data-start-command="run"]');
+            const startShutdownItem = startMenu.querySelector('[data-start-command="shutdown"]');
+            const startSubmenuBack = projectsSubmenu.querySelector(".start-submenu-back");
+            const runDialogBackdrop = document.getElementById("run-dialog-backdrop");
+            const runDialog = runDialogBackdrop.querySelector(".run-dialog");
+            const runDialogClose = document.getElementById("run-dialog-close");
+            const runForm = document.getElementById("run-form");
+            const runCommandInput = document.getElementById("run-command-input");
+            const runDropdownToggle = document.getElementById("run-dropdown-toggle");
+            const runProjectList = document.getElementById("run-project-list");
+            const runError = document.getElementById("run-error");
+            const runCancel = document.getElementById("run-cancel");
+            const runBrowse = document.getElementById("run-browse");
+            const shutdownDialogBackdrop = document.getElementById("shutdown-dialog-backdrop");
+            const shutdownDialog = shutdownDialogBackdrop.querySelector(".shutdown-dialog");
+            const shutdownDialogClose = document.getElementById("shutdown-dialog-close");
+            const shutdownConfirm = document.getElementById("shutdown-confirm");
+            const shutdownRestart = document.getElementById("shutdown-restart");
+            const shutdownCancel = document.getElementById("shutdown-cancel");
+            const shutdownScreen = document.getElementById("shutdown-screen");
+            const shutdownScreenRestart = document.getElementById("shutdown-screen-restart");
             const iconLaneGap = 24;
             const iconColumnWidth = 96;
             const iconRowHeight = 90;
@@ -928,6 +1694,692 @@
 
             renderProjects();
 
+            function normalizeProjectName(value) {
+                return String(value || "")
+                    .toLocaleLowerCase()
+                    .replace(/[’']/g, "")
+                    .replace(/[^a-z0-9]+/g, " ")
+                    .trim();
+            }
+
+            function createStartProjectItem(project) {
+                const isLink = project.launchMode !== "window" && project.url;
+                const item = document.createElement(isLink ? "a" : "button");
+                const iconWrap = document.createElement("span");
+                const image = document.createElement("img");
+                const label = document.createElement("span");
+                const spacer = document.createElement("span");
+
+                item.className = "start-menu-item start-project-item";
+                item.dataset.projectId = project.id;
+                item.setAttribute("role", "menuitem");
+                item.tabIndex = -1;
+
+                if (isLink) {
+                    item.href = project.url;
+                    if (project.openInNewTab) {
+                        item.rel = "noopener noreferrer";
+                        item.target = "_blank";
+                    }
+                } else {
+                    item.type = "button";
+                }
+
+                iconWrap.className = "start-project-icon";
+                iconWrap.setAttribute("aria-hidden", "true");
+                image.alt = "";
+                image.src = project.icon;
+                label.className = "start-menu-item-label";
+                label.textContent = project.label;
+                spacer.setAttribute("aria-hidden", "true");
+
+                iconWrap.appendChild(image);
+                item.append(iconWrap, label, spacer);
+                item.addEventListener("click", function (event) {
+                    closeStartMenu(true);
+                    if (!isLink) {
+                        event.preventDefault();
+                        launchProject(project);
+                    }
+                });
+
+                return item;
+            }
+
+            function renderStartProjectItems() {
+                const fragment = document.createDocumentFragment();
+                projects.forEach(function (project) {
+                    fragment.appendChild(createStartProjectItem(project));
+                });
+                startProjectItems.replaceChildren(fragment);
+            }
+
+            renderStartProjectItems();
+
+            function getVisibleMenuItems(container) {
+                return Array.from(container.querySelectorAll('[role="menuitem"]')).filter(function (item) {
+                    return !item.hidden && window.getComputedStyle(item).display !== "none";
+                });
+            }
+
+            function focusMenuItem(container, index) {
+                const items = getVisibleMenuItems(container);
+                if (!items.length) {
+                    return;
+                }
+
+                const wrappedIndex = (index + items.length) % items.length;
+                items[wrappedIndex].focus({
+                    preventScroll: true
+                });
+            }
+
+            function focusAdjacentMenuItem(container, currentItem, offset) {
+                const items = getVisibleMenuItems(container);
+                const currentIndex = Math.max(0, items.indexOf(currentItem));
+                focusMenuItem(container, currentIndex + offset);
+            }
+
+            function positionProjectsSubmenu() {
+                const desiredTop = startMenuContent.offsetTop + startProjectsItem.offsetTop - 3;
+                if (window.matchMedia("(max-width: 520px)").matches) {
+                    projectsSubmenu.style.removeProperty("max-height");
+                    startMenu.style.setProperty("--submenu-top", "3px");
+                    return;
+                }
+
+                projectsSubmenu.style.maxHeight = Math.max(84, startMenu.offsetHeight - 6) + "px";
+                const maxTop = Math.max(3, startMenu.offsetHeight - projectsSubmenu.offsetHeight - 3);
+                const submenuTop = Math.min(desiredTop, maxTop);
+                startMenu.style.setProperty("--submenu-top", submenuTop + "px");
+            }
+
+            function closeProjectsSubmenu(restoreFocus) {
+                projectsSubmenu.hidden = true;
+                startProjectsItem.classList.remove("is-active");
+                startProjectsItem.setAttribute("aria-expanded", "false");
+                startMenu.classList.remove("submenu-open");
+                if (restoreFocus) {
+                    startProjectsItem.focus({
+                        preventScroll: true
+                    });
+                }
+            }
+
+            function openProjectsSubmenu(focusFirstItem) {
+                projectsSubmenu.hidden = false;
+                positionProjectsSubmenu();
+                startProjectsItem.classList.add("is-active");
+                startProjectsItem.setAttribute("aria-expanded", "true");
+                startMenu.classList.add("submenu-open");
+                if (focusFirstItem) {
+                    focusMenuItem(startProjectItems, 0);
+                }
+            }
+
+            function closeStartMenu(restoreFocus) {
+                if (startMenu.hidden) {
+                    return;
+                }
+
+                closeProjectsSubmenu(false);
+                startMenu.hidden = true;
+                startButton.setAttribute("aria-expanded", "false");
+                if (restoreFocus) {
+                    startButton.focus({
+                        preventScroll: true
+                    });
+                }
+            }
+
+            function openStartMenu(focusPosition) {
+                startMenu.hidden = false;
+                startButton.setAttribute("aria-expanded", "true");
+                closeProjectsSubmenu(false);
+                positionProjectsSubmenu();
+                selectIcon(null);
+
+                const items = getVisibleMenuItems(startMenuContent);
+                if (!items.length) {
+                    return;
+                }
+
+                const focusIndex = focusPosition === "last" ? items.length - 1 : 0;
+                items[focusIndex].focus({
+                    preventScroll: true
+                });
+            }
+
+            function toggleStartMenu() {
+                if (startMenu.hidden) {
+                    openStartMenu("first");
+                } else {
+                    closeStartMenu(false);
+                }
+            }
+
+            function handleStartMenuKeydown(event) {
+                if (event.ctrlKey && event.key === "Escape") {
+                    return;
+                }
+
+                const target = event.target.closest('[role="menuitem"]');
+                if (!target) {
+                    return;
+                }
+
+                const inProjectsSubmenu = Boolean(target.closest("#projects-submenu"));
+                const container = inProjectsSubmenu ? projectsSubmenu : startMenuContent;
+                const items = getVisibleMenuItems(container);
+                const currentIndex = items.indexOf(target);
+
+                if (event.key === "ArrowDown") {
+                    event.preventDefault();
+                    focusMenuItem(container, currentIndex + 1);
+                    return;
+                }
+
+                if (event.key === "ArrowUp") {
+                    event.preventDefault();
+                    focusMenuItem(container, currentIndex - 1);
+                    return;
+                }
+
+                if (event.key === "Home") {
+                    event.preventDefault();
+                    focusMenuItem(container, 0);
+                    return;
+                }
+
+                if (event.key === "End") {
+                    event.preventDefault();
+                    focusMenuItem(container, items.length - 1);
+                    return;
+                }
+
+                if (event.key === "ArrowRight" && target === startProjectsItem) {
+                    event.preventDefault();
+                    openProjectsSubmenu(true);
+                    return;
+                }
+
+                if (event.key === "ArrowLeft" && inProjectsSubmenu) {
+                    event.preventDefault();
+                    closeProjectsSubmenu(true);
+                    return;
+                }
+
+                if (event.key === "Escape") {
+                    event.preventDefault();
+                    if (inProjectsSubmenu) {
+                        closeProjectsSubmenu(true);
+                    } else {
+                        closeStartMenu(true);
+                    }
+                    return;
+                }
+
+                if (event.key === "Tab") {
+                    closeStartMenu(false);
+                    return;
+                }
+
+                if ((event.key === " " || event.key === "Spacebar") && target.tagName === "A") {
+                    event.preventDefault();
+                    target.click();
+                    return;
+                }
+
+                if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+                    const key = event.key.toLocaleLowerCase();
+                    const nextItem = items.slice(currentIndex + 1).concat(items.slice(0, currentIndex + 1)).find(function (item) {
+                        return item.textContent.trim().toLocaleLowerCase().startsWith(key);
+                    });
+                    if (nextItem) {
+                        event.preventDefault();
+                        nextItem.focus({
+                            preventScroll: true
+                        });
+                    }
+                }
+            }
+
+            startButton.addEventListener("click", toggleStartMenu);
+            startButton.addEventListener("keydown", function (event) {
+                if (event.key === "ArrowDown") {
+                    event.preventDefault();
+                    if (startMenu.hidden) {
+                        openStartMenu("first");
+                    } else {
+                        focusMenuItem(startMenuContent, 0);
+                    }
+                } else if (event.key === "ArrowUp") {
+                    event.preventDefault();
+                    if (startMenu.hidden) {
+                        openStartMenu("last");
+                    } else {
+                        focusMenuItem(startMenuContent, getVisibleMenuItems(startMenuContent).length - 1);
+                    }
+                }
+            });
+            startMenu.addEventListener("keydown", handleStartMenuKeydown);
+            startProjectsItem.addEventListener("click", function (event) {
+                if (projectsSubmenu.hidden) {
+                    openProjectsSubmenu(event.detail === 0 || window.matchMedia("(max-width: 520px)").matches);
+                } else {
+                    closeProjectsSubmenu(false);
+                }
+            });
+            startProjectsItem.addEventListener("pointerenter", function () {
+                if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+                    openProjectsSubmenu(false);
+                }
+            });
+            startSubmenuBack.addEventListener("click", function () {
+                closeProjectsSubmenu(true);
+            });
+            [startWelcomeItem, startGithubItem, startRunItem, startShutdownItem].forEach(function (item) {
+                item.addEventListener("pointerenter", function () {
+                    if (!projectsSubmenu.hidden && window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+                        closeProjectsSubmenu(false);
+                    }
+                });
+            });
+            document.addEventListener("pointerdown", function (event) {
+                if (!startMenu.hidden && !startShell.contains(event.target)) {
+                    closeStartMenu(false);
+                }
+            }, true);
+            document.addEventListener("keydown", function (event) {
+                if (event.ctrlKey && event.key === "Escape") {
+                    event.preventDefault();
+                    if (!runDialogBackdrop.hidden || !shutdownDialogBackdrop.hidden || !shutdownScreen.hidden) {
+                        return;
+                    }
+                    if (startMenu.hidden) {
+                        openStartMenu("first");
+                    } else {
+                        closeStartMenu(true);
+                    }
+                }
+            });
+
+            function getDialogFocusables(dialog) {
+                return Array.from(dialog.querySelectorAll('button, input, a[href], [tabindex]:not([tabindex="-1"])')).filter(function (element) {
+                    return !element.disabled && !element.hidden && element.offsetParent !== null;
+                });
+            }
+
+            function trapDialogFocus(event, dialog) {
+                if (event.key !== "Tab") {
+                    return;
+                }
+
+                const focusables = getDialogFocusables(dialog);
+                if (!focusables.length) {
+                    event.preventDefault();
+                    return;
+                }
+
+                const first = focusables[0];
+                const last = focusables[focusables.length - 1];
+                if (event.shiftKey && document.activeElement === first) {
+                    event.preventDefault();
+                    last.focus();
+                } else if (!event.shiftKey && document.activeElement === last) {
+                    event.preventDefault();
+                    first.focus();
+                }
+            }
+
+            function setShellInteractionDisabled(disabled) {
+                [desktop, taskbar].forEach(function (element) {
+                    element.inert = disabled;
+                    if (disabled) {
+                        element.setAttribute("aria-hidden", "true");
+                    } else {
+                        element.removeAttribute("aria-hidden");
+                    }
+                });
+            }
+
+            function getRunMatches(value) {
+                const query = normalizeProjectName(value);
+                if (!query) {
+                    return projects.slice();
+                }
+
+                return projects.filter(function (project) {
+                    return normalizeProjectName(project.label).includes(query)
+                        || normalizeProjectName(project.id).includes(query);
+                });
+            }
+
+            function chooseRunProject(project) {
+                runCommandInput.value = project.label;
+                runError.hidden = true;
+                closeRunProjectList();
+                runCommandInput.focus({
+                    preventScroll: true
+                });
+                runCommandInput.select();
+            }
+
+            function createRunProjectOption(project) {
+                const option = document.createElement("div");
+                const image = document.createElement("img");
+                const label = document.createElement("span");
+
+                option.className = "run-project-option";
+                option.dataset.projectId = project.id;
+                option.id = "run-project-option-" + project.id;
+                option.setAttribute("aria-selected", "false");
+                option.setAttribute("role", "option");
+                image.alt = "";
+                image.src = project.icon;
+                label.textContent = project.label;
+                option.append(image, label);
+                option.addEventListener("pointerenter", function () {
+                    setActiveRunOption(option);
+                });
+                option.addEventListener("click", function () {
+                    chooseRunProject(project);
+                });
+
+                return option;
+            }
+
+            function renderRunProjectList(value) {
+                const matches = getRunMatches(value);
+                const fragment = document.createDocumentFragment();
+
+                if (!matches.length) {
+                    const empty = document.createElement("div");
+                    empty.className = "run-project-empty";
+                    empty.textContent = "No matching projects";
+                    fragment.appendChild(empty);
+                } else {
+                    matches.forEach(function (project) {
+                        fragment.appendChild(createRunProjectOption(project));
+                    });
+                }
+
+                runProjectList.replaceChildren(fragment);
+                setActiveRunOption(null);
+                return matches;
+            }
+
+            function setActiveRunOption(option) {
+                const options = Array.from(runProjectList.querySelectorAll(".run-project-option"));
+                options.forEach(function (item) {
+                    const isActive = item === option;
+                    item.classList.toggle("is-active", isActive);
+                    item.setAttribute("aria-selected", String(isActive));
+                });
+
+                if (option) {
+                    runCommandInput.setAttribute("aria-activedescendant", option.id);
+                    option.scrollIntoView({
+                        block: "nearest"
+                    });
+                } else {
+                    runCommandInput.removeAttribute("aria-activedescendant");
+                }
+            }
+
+            function moveActiveRunOption(offset, edge) {
+                const options = Array.from(runProjectList.querySelectorAll(".run-project-option"));
+                if (!options.length) {
+                    return;
+                }
+
+                if (edge === "first") {
+                    setActiveRunOption(options[0]);
+                    return;
+                }
+                if (edge === "last") {
+                    setActiveRunOption(options[options.length - 1]);
+                    return;
+                }
+
+                const activeId = runCommandInput.getAttribute("aria-activedescendant");
+                const currentIndex = options.findIndex(function (option) {
+                    return option.id === activeId;
+                });
+                const nextIndex = currentIndex < 0
+                    ? offset < 0 ? options.length - 1 : 0
+                    : (currentIndex + offset + options.length) % options.length;
+                setActiveRunOption(options[nextIndex]);
+            }
+
+            function closeRunProjectList() {
+                setActiveRunOption(null);
+                runProjectList.hidden = true;
+                runCommandInput.setAttribute("aria-expanded", "false");
+            }
+
+            function openRunProjectList(value, focusPosition) {
+                renderRunProjectList(value);
+                runProjectList.hidden = false;
+                runCommandInput.setAttribute("aria-expanded", "true");
+                if (focusPosition) {
+                    moveActiveRunOption(0, focusPosition);
+                }
+                runCommandInput.focus({
+                    preventScroll: true
+                });
+            }
+
+            function closeRunDialog(restoreFocus) {
+                closeRunProjectList();
+                runDialogBackdrop.hidden = true;
+                setShellInteractionDisabled(false);
+                if (restoreFocus) {
+                    startButton.focus({
+                        preventScroll: true
+                    });
+                }
+            }
+
+            function openRunDialog() {
+                closeStartMenu(false);
+                runCommandInput.value = "";
+                runError.hidden = true;
+                renderRunProjectList("");
+                closeRunProjectList();
+                runDialogBackdrop.hidden = false;
+                runCommandInput.focus({
+                    preventScroll: true
+                });
+                setShellInteractionDisabled(true);
+            }
+
+            function resolveRunProject(value) {
+                const query = normalizeProjectName(value);
+                if (!query) {
+                    return null;
+                }
+
+                const exactProject = projects.find(function (project) {
+                    return normalizeProjectName(project.label) === query
+                        || normalizeProjectName(project.id) === query;
+                });
+                if (exactProject) {
+                    return exactProject;
+                }
+
+                const matches = getRunMatches(value);
+                return matches.length === 1 ? matches[0] : null;
+            }
+
+            function showRunError(message, listValue) {
+                runError.textContent = message;
+                runError.hidden = false;
+                openRunProjectList(listValue, null);
+                runCommandInput.focus({
+                    preventScroll: true
+                });
+            }
+
+            startRunItem.addEventListener("click", openRunDialog);
+            runDialogClose.addEventListener("click", function () {
+                closeRunDialog(true);
+            });
+            runCancel.addEventListener("click", function () {
+                closeRunDialog(true);
+            });
+            runDropdownToggle.addEventListener("click", function () {
+                if (runProjectList.hidden) {
+                    openRunProjectList("", "first");
+                } else {
+                    closeRunProjectList();
+                    runCommandInput.focus({
+                        preventScroll: true
+                    });
+                }
+            });
+            runBrowse.addEventListener("click", function () {
+                openRunProjectList("", "first");
+            });
+            runCommandInput.addEventListener("input", function () {
+                runError.hidden = true;
+                if (!runProjectList.hidden) {
+                    renderRunProjectList(runCommandInput.value);
+                }
+            });
+            runCommandInput.addEventListener("keydown", function (event) {
+                if (event.ctrlKey && event.key === "Escape") {
+                    return;
+                }
+
+                if (event.key === "ArrowDown") {
+                    event.preventDefault();
+                    if (runProjectList.hidden) {
+                        openRunProjectList(runCommandInput.value, "first");
+                    } else {
+                        moveActiveRunOption(1);
+                    }
+                } else if (event.key === "ArrowUp") {
+                    event.preventDefault();
+                    if (runProjectList.hidden) {
+                        openRunProjectList(runCommandInput.value, "last");
+                    } else {
+                        moveActiveRunOption(-1);
+                    }
+                } else if (event.key === "Enter" && !runProjectList.hidden) {
+                    const activeId = runCommandInput.getAttribute("aria-activedescendant");
+                    const activeOption = activeId ? document.getElementById(activeId) : null;
+                    if (activeOption) {
+                        const project = projects.find(function (entry) {
+                            return entry.id === activeOption.dataset.projectId;
+                        });
+                        if (project) {
+                            event.preventDefault();
+                            chooseRunProject(project);
+                            runForm.requestSubmit();
+                        }
+                    }
+                } else if (event.key === "Escape") {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    if (!runProjectList.hidden) {
+                        closeRunProjectList();
+                    } else {
+                        closeRunDialog(true);
+                    }
+                }
+            });
+            runForm.addEventListener("submit", function (event) {
+                event.preventDefault();
+                const project = resolveRunProject(runCommandInput.value);
+                if (!project) {
+                    const matches = getRunMatches(runCommandInput.value);
+                    if (!normalizeProjectName(runCommandInput.value)) {
+                        showRunError("Type a project name or choose one from the list.", "");
+                    } else if (matches.length > 1) {
+                        showRunError("More than one project matches. Choose the one you want.", runCommandInput.value);
+                    } else {
+                        showRunError("AndkonOS can't find that project. Choose an existing project.", runCommandInput.value);
+                    }
+                    return;
+                }
+
+                closeRunDialog(true);
+                launchProject(project);
+            });
+            runDialog.addEventListener("keydown", function (event) {
+                if (event.ctrlKey && event.key === "Escape") {
+                    return;
+                }
+                if (event.key === "Escape") {
+                    event.preventDefault();
+                    closeRunDialog(true);
+                    return;
+                }
+                trapDialogFocus(event, runDialog);
+            });
+
+            function closeShutdownDialog(restoreFocus) {
+                shutdownDialogBackdrop.hidden = true;
+                setShellInteractionDisabled(false);
+                if (restoreFocus) {
+                    startButton.focus({
+                        preventScroll: true
+                    });
+                }
+            }
+
+            function openShutdownDialog() {
+                closeStartMenu(false);
+                shutdownDialogBackdrop.hidden = false;
+                shutdownConfirm.focus({
+                    preventScroll: true
+                });
+                setShellInteractionDisabled(true);
+            }
+
+            startShutdownItem.addEventListener("click", openShutdownDialog);
+            shutdownDialogClose.addEventListener("click", function () {
+                closeShutdownDialog(true);
+            });
+            shutdownCancel.addEventListener("click", function () {
+                closeShutdownDialog(true);
+            });
+            shutdownRestart.addEventListener("click", function () {
+                window.location.reload();
+            });
+            shutdownConfirm.addEventListener("click", function () {
+                closeShutdownDialog(false);
+                pixelStage.inert = true;
+                pixelStage.setAttribute("aria-hidden", "true");
+                shutdownScreen.hidden = false;
+                shutdownScreenRestart.focus({
+                    preventScroll: true
+                });
+            });
+            shutdownScreenRestart.addEventListener("click", function () {
+                window.location.reload();
+            });
+            shutdownDialog.addEventListener("keydown", function (event) {
+                if (event.ctrlKey && event.key === "Escape") {
+                    return;
+                }
+                if (event.key === "Escape") {
+                    event.preventDefault();
+                    closeShutdownDialog(true);
+                    return;
+                }
+                trapDialogFocus(event, shutdownDialog);
+            });
+
+            startWelcomeItem.addEventListener("click", function () {
+                closeStartMenu(true);
+                welcomeWindowController.openWindow();
+            });
+            startGithubItem.addEventListener("click", function () {
+                closeStartMenu(true);
+            });
+
             function getRegularIcons() {
                 return icons.filter(function (icon) {
                     return !icon.classList.contains("pinned-shortcut");
@@ -1130,28 +2582,48 @@
                 }
             }
 
-            function openIcon(icon) {
-                const launchMode = icon.dataset.launchMode;
-                const target = icon.dataset.target;
-                const openInNewTab = icon.dataset.targetBlank === "true";
+            function launchDestination(destination) {
+                const launchMode = destination.launchMode || "link";
 
                 if (launchMode === "window") {
-                    const controller = windowControllers[icon.dataset.windowId];
+                    const controller = windowControllers[destination.windowId];
                     if (controller) {
                         controller.openWindow();
                     }
                     return;
                 }
 
-                if (!target) {
+                if (!destination.url) {
                     return;
                 }
 
-                if (openInNewTab) {
-                    window.open(target, "_blank", "noopener,noreferrer");
+                if (destination.openInNewTab) {
+                    window.open(destination.url, "_blank", "noopener,noreferrer");
                 } else {
-                    window.location.href = target;
+                    window.location.href = destination.url;
                 }
+            }
+
+            function launchProject(project) {
+                launchDestination(project);
+            }
+
+            function openIcon(icon) {
+                const project = projects.find(function (entry) {
+                    return entry.id === icon.dataset.projectId;
+                });
+
+                if (project) {
+                    launchProject(project);
+                    return;
+                }
+
+                launchDestination({
+                    launchMode: icon.dataset.launchMode,
+                    openInNewTab: icon.dataset.targetBlank === "true",
+                    url: icon.dataset.target,
+                    windowId: icon.dataset.windowId
+                });
             }
 
             function isTapLaunchPointer(event) {
@@ -1541,6 +3013,7 @@
             orbitFrame.addEventListener("load", function () {
                 try {
                     orbitFrame.contentWindow.document.addEventListener("pointerdown", function () {
+                        closeStartMenu(false);
                         orbitWindowController.bringToFront();
                     });
                 } catch (_) {
@@ -1561,6 +3034,9 @@
             window.addEventListener("resize", function () {
                 applyPixelScale();
                 layoutDesktopIcons();
+                if (!startMenu.hidden) {
+                    positionProjectsSubmenu();
+                }
                 welcomeWindowController.handleResize();
                 orbitWindowController.handleResize();
             });
