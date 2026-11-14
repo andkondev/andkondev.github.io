@@ -1,7 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
-  <polygon points="1,2 7,1 7,7 1,7" fill="#f04e3e"/>
-  <polygon points="8,1 15,0 15,6 8,7" fill="#4da2ff"/>
-  <polygon points="1,8 7,8 7,15 1,14" fill="#39b44a"/>
-  <polygon points="8,8 15,9 15,16 8,15" fill="#f1d13b"/>
-  <path d="M7.5 0.5v15M0.5 7.5h15" stroke="#ffffff" stroke-width="0.8" opacity="0.7"/>
+  <!-- AndkonOS 85 start logo: the four-pane window shape of 1985 in the Andkon mascot's colours (yellow, orange, white, black).
+       Whole shapes on a whole-pixel grid, smoothed rather than snapped, so the gaps stay even when the display is scaled (125%, 150%). -->
+  <rect x="0" y="1" width="16" height="14" rx="1.6" fill="#000000"/>
+  <rect x="1" y="2" width="5" height="5" fill="#fde306"/>
+  <rect x="7" y="2" width="8" height="8" fill="#f97704"/>
+  <rect x="1" y="8" width="5" height="6" fill="#ffffff"/>
+  <rect x="7" y="11" width="8" height="3" fill="#ffffff"/>
 </svg>

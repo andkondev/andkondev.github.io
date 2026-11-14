@@ -185,6 +185,11 @@
             width: 32px;
         }
 
+        /* The second pinned shortcut sits one icon row above the first. */
+        .desktop-icon.pinned-shortcut.pinned-shortcut-upper {
+            bottom: calc(var(--taskbar-height) + var(--desktop-block-gutter) + var(--viewport-bottom-inset) + 90px);
+        }
+
         .desktop-icon.pinned-shortcut .label {
             white-space: nowrap;
         }
@@ -1032,6 +1037,54 @@
             width: 590px;
         }
 
+        .lava-window {
+            min-width: 0;
+            width: 306px;
+        }
+
+        .lava-window .window-body {
+            align-items: center;
+            flex: 0 0 auto;
+            gap: 7px;
+        }
+
+        .lava-screen {
+            background: #0a0820;
+            box-shadow: var(--border-sunken-outer), var(--border-sunken-inner);
+            max-width: 100%;
+            padding: 2px;
+        }
+
+        .lava-canvas {
+            display: block;
+            height: auto;
+            max-width: 100%;
+            width: 280px;
+        }
+
+        .lava-link {
+            align-items: center;
+            color: #0000ee;
+            cursor: pointer;
+            display: inline-flex;
+            gap: 6px;
+            padding: 1px 2px;
+        }
+
+        .lava-link:visited {
+            color: #551a8b;
+        }
+
+        .lava-link:focus-visible {
+            outline: 1px dotted #000000;
+        }
+
+        .lava-link-logo {
+            flex: 0 0 auto;
+            height: 20px;
+            width: 33px;
+        }
+
         .license-plate-icon {
             height: auto;
             max-width: 32px;
@@ -1176,6 +1229,29 @@
                     <iframe class="orbit-frame" src="orbit/embed.html?v=20260629-touch-drag-fix" title="Orbit"></iframe>
                 </div>
             </section>
+
+            <section aria-label="Lava Lamp window" class="window lava-window" hidden>
+                <div class="title-bar">
+                    <div class="title-bar-left">
+                        <img alt="" class="icon-asset desktop-window-icon pixel-icon" height="16" src="assets/lava-lamp-icon-16.svg" width="16">
+                        <span class="title-bar-text">Lava Lamp</span>
+                    </div>
+                    <div class="title-bar-controls">
+                        <button aria-label="Minimize" class="title-button minimize" type="button"></button>
+                        <button aria-label="Maximize" class="title-button maximize" type="button"></button>
+                        <button aria-label="Close" class="title-button close" type="button"></button>
+                    </div>
+                </div>
+                <div class="window-body">
+                    <div class="lava-screen">
+                        <canvas aria-label="Lava lamp wax rising and sinking" class="lava-canvas" height="340" role="img" width="280"></canvas>
+                    </div>
+                    <a class="lava-link" href="https://addons.mozilla.org/en-US/firefox/addon/lavalamp/" rel="noopener noreferrer" target="_blank">
+                        <img alt="" class="icon-asset lava-link-logo" height="39" src="assets/phoenix-logo.png" width="64">
+                        <span>Get Lava Lamp Theme for Phoenix</span>
+                    </a>
+                </div>
+            </section>
         </main>
 
         <footer class="taskbar">
@@ -1188,13 +1264,13 @@
                     id="start-button"
                     type="button"
                 >
-                    <img alt="" class="icon-asset start-icon" height="16" src="assets/start.svg" width="16">
+                    <img alt="" class="icon-asset start-icon" height="16" src="assets/start.svg" srcset="assets/start-16.png 1x, assets/start-20.png 1.25x, assets/start-24.png 1.5x, assets/start-32.png 2x, assets/start-48.png 3x" width="16">
                     <span>Start</span>
                 </button>
 
                 <div aria-labelledby="start-button" class="start-menu" id="start-menu" role="menu" hidden>
                     <div aria-hidden="true" class="start-brand-rail">
-                        <span><strong>AndkonOS</strong> 98</span>
+                        <span><strong>AndkonOS</strong> 85</span>
                     </div>
 
                     <div class="start-menu-content" id="start-menu-content" role="none">
@@ -1284,6 +1360,10 @@
 
             <button aria-label="Orbit window" class="task-button" type="button" hidden>
                 <span class="task-button-text">Orbit</span>
+            </button>
+
+            <button aria-label="Lava Lamp window" class="task-button" type="button" hidden>
+                <span class="task-button-text">Lava Lamp</span>
             </button>
 
             <div class="taskbar-spacer"></div>
@@ -1380,12 +1460,14 @@
 
     <section aria-labelledby="shutdown-screen-title" aria-modal="true" class="shutdown-screen" id="shutdown-screen" role="dialog" hidden>
         <div class="shutdown-screen-panel">
-            <h1 class="shutdown-screen-title" id="shutdown-screen-title">AndkonOS 98</h1>
+            <h1 class="shutdown-screen-title" id="shutdown-screen-title">AndkonOS 85</h1>
             <p>It is now safe to close this tab.</p>
             <button class="win-button shell-dialog-button" id="shutdown-screen-restart" type="button"><span class="win-button-label">Restart AndkonOS</span></button>
         </div>
     </section>
 
+    <script src="assets/lava-core.js?v=20261113"></script>
+    <script src="assets/lava-lamp.js?v=20261113"></script>
     <script>
         (function () {
             const root = document.documentElement;
@@ -1398,6 +1480,8 @@
             const taskbar = document.querySelector(".taskbar");
             const taskButton = document.querySelector(".task-button");
             const orbitTaskButton = document.querySelectorAll(".task-button")[1];
+            const lavaWindow = document.querySelector(".lava-window");
+            const lavaTaskButton = document.querySelectorAll(".task-button")[2];
             const clock = document.getElementById("clock");
             const startShell = document.getElementById("start-shell");
             const startButton = document.getElementById("start-button");
@@ -1475,6 +1559,13 @@
                 label: "/andkondev",
                 openInNewTab: true,
                 url: "https://github.com/andkondev"
+            };
+            const lavaShortcut = {
+                icon: "assets/lava-lamp-icon.svg",
+                id: "lava-lamp",
+                label: "Lava Lamp",
+                launchMode: "window",
+                windowId: "lava-lamp"
             };
             const projects = [
                 {
@@ -1561,6 +1652,9 @@
                     url: "https://andkon.dev/new-tabs-right/"
                 }
             ];
+            // Everything Start > Projects and Run can open: the projects with a
+            // desktop icon in the left-hand column, then the pinned Lava Lamp.
+            const launchableProjects = projects.concat([lavaShortcut]);
             let icons = [];
 
             function createProjectIcon(project) {
@@ -1651,6 +1745,34 @@
                 return button;
             }
 
+            function createLavaShortcut() {
+                const button = document.createElement("button");
+                const frame = document.createElement("span");
+                const image = document.createElement("img");
+                const label = document.createElement("span");
+
+                button.className = "desktop-icon pinned-shortcut pinned-shortcut-upper";
+                button.dataset.projectId = lavaShortcut.id;
+                button.dataset.launchMode = "window";
+                button.dataset.windowId = lavaShortcut.windowId;
+                button.setAttribute("aria-label", "Open Lava Lamp");
+                button.type = "button";
+
+                frame.className = "icon-frame";
+                frame.setAttribute("aria-hidden", "true");
+
+                image.alt = "";
+                image.className = "icon-asset desktop-project-icon pixel-icon";
+                image.src = lavaShortcut.icon;
+
+                label.className = "label";
+                label.textContent = lavaShortcut.label;
+
+                frame.appendChild(image);
+                button.append(frame, label);
+                return button;
+            }
+
             function createWindowAction(project) {
                 const link = document.createElement("a");
                 const label = document.createElement("span");
@@ -1685,6 +1807,7 @@
                         windowActionCount += 1;
                     }
                 });
+                desktopIconFragment.appendChild(createLavaShortcut());
                 desktopIconFragment.appendChild(createGithubShortcut());
 
                 desktopIcons.replaceChildren(desktopIconFragment);
@@ -1748,7 +1871,7 @@
 
             function renderStartProjectItems() {
                 const fragment = document.createDocumentFragment();
-                projects.forEach(function (project) {
+                launchableProjects.forEach(function (project) {
                     fragment.appendChild(createStartProjectItem(project));
                 });
                 startProjectItems.replaceChildren(fragment);
@@ -2046,10 +2169,10 @@
             function getRunMatches(value) {
                 const query = normalizeProjectName(value);
                 if (!query) {
-                    return projects.slice();
+                    return launchableProjects.slice();
                 }
 
-                return projects.filter(function (project) {
+                return launchableProjects.filter(function (project) {
                     return normalizeProjectName(project.label).includes(query)
                         || normalizeProjectName(project.id).includes(query);
                 });
@@ -2200,7 +2323,7 @@
                     return null;
                 }
 
-                const exactProject = projects.find(function (project) {
+                const exactProject = launchableProjects.find(function (project) {
                     return normalizeProjectName(project.label) === query
                         || normalizeProjectName(project.id) === query;
                 });
@@ -2270,7 +2393,7 @@
                     const activeId = runCommandInput.getAttribute("aria-activedescendant");
                     const activeOption = activeId ? document.getElementById(activeId) : null;
                     if (activeOption) {
-                        const project = projects.find(function (entry) {
+                        const project = launchableProjects.find(function (entry) {
                             return entry.id === activeOption.dataset.projectId;
                         });
                         if (project) {
@@ -2609,7 +2732,7 @@
             }
 
             function openIcon(icon) {
-                const project = projects.find(function (entry) {
+                const project = launchableProjects.find(function (entry) {
                     return entry.id === icon.dataset.projectId;
                 });
 
@@ -3005,6 +3128,28 @@
                 windowEl: orbitWindow
             });
             windowControllers.orbit = orbitWindowController;
+            const lavaWindowController = setupWindow({
+                canMaximize: false,
+                initiallyClosed: true,
+                // Opens to the right of the Welcome window where there is room,
+                // and always fully on screen.
+                keepFullyVisibleOnStartup: function () {
+                    return true;
+                },
+                reserveIconLaneOnStartup: function () {
+                    return !isNarrowViewport();
+                },
+                startupOffsetX: function () {
+                    return isNarrowViewport() ? 6 : 660;
+                },
+                startupOffsetY: 18,
+                taskButtonEl: lavaTaskButton,
+                windowEl: lavaWindow
+            });
+            windowControllers[lavaShortcut.windowId] = lavaWindowController;
+            if (window.AndkonLavaLamp) {
+                window.AndkonLavaLamp.start(lavaWindow.querySelector(".lava-canvas"));
+            }
 
             const orbitFrame = orbitWindow.querySelector(".orbit-frame");
             orbitFrame.addEventListener("focus", function () {
@@ -3039,6 +3184,7 @@
                 }
                 welcomeWindowController.handleResize();
                 orbitWindowController.handleResize();
+                lavaWindowController.handleResize();
             });
         }());
     </script>

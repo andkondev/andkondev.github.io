@@ -16,6 +16,12 @@ Source for [andkon.dev](https://andkon.dev/), a personal developer portfolio pre
 - [Multirow Taskbar W11](https://github.com/andkondev/draggable-multirow-taskbar-systray-windows-11/tree/main#readme) - a Windows 11 multi-row taskbar and system tray mod repository.
 - [Orbit](orbit/) - a web port of the old Orbit game from Encarta 97's Interactivities section. It opens from the desktop icon and also runs directly at [andkon.dev/orbit](https://andkon.dev/orbit/). See the [Orbit README](orbit/README.md) for screenshots and historical links.
 
+- [Lava Lamp](https://addons.mozilla.org/en-US/firefox/addon/lavalamp/) - an animated lava lamp theme for Firefox. The desktop's Lava Lamp window draws the same wax live, using the theme's own simulation (`assets/lava-core.js`).
+
+## Credits
+
+- `assets/phoenix-logo.png` is the logo of Mozilla's Phoenix browser (2002), by Mozilla, from [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Mozilla_Phoenix_Logo.png), available under the MPL 1.1, GPL and LGPL.
+
 ## Local Development
 
 This is a static site. From the repository root:
