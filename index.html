@@ -194,6 +194,20 @@
             white-space: nowrap;
         }
 
+        /* The site links sit above Lava Lamp. Their labels are long and wrap,
+           so each gets a taller row than the one-line shortcuts below. */
+        .desktop-icon.pinned-shortcut.pinned-shortcut-site .label {
+            white-space: normal;
+        }
+
+        .desktop-icon.pinned-shortcut.pinned-shortcut-third {
+            bottom: calc(var(--taskbar-height) + var(--desktop-block-gutter) + var(--viewport-bottom-inset) + 180px);
+        }
+
+        .desktop-icon.pinned-shortcut.pinned-shortcut-fourth {
+            bottom: calc(var(--taskbar-height) + var(--desktop-block-gutter) + var(--viewport-bottom-inset) + 290px);
+        }
+
         .window {
             background: var(--surface);
             box-shadow: var(--border-window-outer), var(--border-window-inner);
@@ -1560,6 +1574,24 @@
                 openInNewTab: true,
                 url: "https://github.com/andkondev"
             };
+            // The owner's other sites, pinned above Lava Lamp (top one first).
+            const siteShortcuts = [
+                {
+                    icon: "assets/andkon-com-favicon.png",
+                    id: "andkon-com",
+                    imageClass: "pixel-icon",
+                    label: "Andkon Arcade - Free Flash Games",
+                    slotClass: "pinned-shortcut-fourth",
+                    url: "https://andkon.com/"
+                },
+                {
+                    icon: "assets/andkon-net-favicon.svg",
+                    id: "andkon-net",
+                    label: "Andkon.NET - updates every Friday",
+                    slotClass: "pinned-shortcut-third",
+                    url: "https://andkon.net/"
+                }
+            ];
             const lavaShortcut = {
                 icon: "assets/lava-lamp-icon.svg",
                 id: "lava-lamp",
@@ -1745,6 +1777,36 @@
                 return button;
             }
 
+            function createSiteShortcut(shortcut) {
+                const button = document.createElement("a");
+                const frame = document.createElement("span");
+                const image = document.createElement("img");
+                const label = document.createElement("span");
+
+                button.className = "desktop-icon pinned-shortcut pinned-shortcut-site " + shortcut.slotClass;
+                button.dataset.projectId = shortcut.id;
+                button.dataset.target = shortcut.url;
+                button.dataset.targetBlank = "true";
+                button.dataset.launchMode = "link";
+                button.href = shortcut.url;
+                button.rel = "noopener noreferrer";
+                button.target = "_blank";
+
+                frame.className = "icon-frame";
+                frame.setAttribute("aria-hidden", "true");
+
+                image.alt = "";
+                image.className = ["icon-asset", "desktop-project-icon", shortcut.imageClass].filter(Boolean).join(" ");
+                image.src = shortcut.icon;
+
+                label.className = "label";
+                label.textContent = shortcut.label;
+
+                frame.appendChild(image);
+                button.append(frame, label);
+                return button;
+            }
+
             function createLavaShortcut() {
                 const button = document.createElement("button");
                 const frame = document.createElement("span");
@@ -1806,6 +1868,9 @@
                         windowActionFragment.appendChild(createWindowAction(project));
                         windowActionCount += 1;
                     }
+                });
+                siteShortcuts.forEach(function (shortcut) {
+                    desktopIconFragment.appendChild(createSiteShortcut(shortcut));
                 });
                 desktopIconFragment.appendChild(createLavaShortcut());
                 desktopIconFragment.appendChild(createGithubShortcut());
