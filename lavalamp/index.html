@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lava Lamp for Firefox</title>
+  <meta name="description" content="Lava Lamp: slow, looping lava behind your Firefox tabs, toolbar and sidebar. Try the controls live, then get the extension or the theme.">
+  <link rel="icon" type="image/svg+xml" href="ext/icon.svg">
+  <style>
+    /*
+     * The whole page is one demo browser. It takes its colours from the lava's
+     * own settings: demo.js sets these from the extension's theme colours
+     * whenever a control changes. The values here are the Midnight look, used
+     * until then.
+     */
+    :root {
+      color-scheme: dark;
+      --bg: #1c1b22;
+      --text: #f7ecf3;
+      --accent: #4a2b9c;
+      --accent-text: #ffffff;
+      --line: #a78bfa;
+      --rule: color-mix(in srgb, var(--text) 16%, var(--bg));
+      --max: 1120px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { background: var(--bg); }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.55;
+    }
+
+    a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+    a:hover { text-decoration-thickness: 2px; }
+    a:focus-visible, button:focus-visible { outline: 2px solid var(--line); outline-offset: 2px; }
+
+    .page { margin: 0 auto; max-width: var(--max); padding: 22px 16px; }
+
+    /* ---------- the demo browser ---------- */
+    .fx {
+      --frame: #0a0820;
+      --tab-text: #f7ecf3;
+      --tab-selected: rgba(62, 36, 140, 0.8);
+      --tab-selected-text: #f7ecf3;
+      --toolbar: transparent;
+      --toolbar-text: #f7ecf3;
+      --icons: #f7ecf3;
+      --field: rgba(28, 27, 34, 0.88);
+      --field-text: #ffffff;
+      --field-border: rgba(167, 139, 250, 0.5);
+      --hover: rgba(255, 255, 255, 0.10);
+      --active: rgba(255, 255, 255, 0.16);
+      --content: #0a0820;
+      --content-text: #f7ecf3;
+      --panel-border: rgba(255, 255, 255, 0.2);
+      --head: 84px;
+      --side: 52px;
+      position: relative;
+      isolation: isolate;
+      display: flex;
+      flex-direction: column;
+      min-height: max(calc(var(--head) + var(--panel-h, 492px) + 20px), calc(100vh - 44px));
+      overflow: hidden;
+      border: 1px solid var(--rule);
+      border-radius: 10px;
+      background: var(--frame);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+      color: var(--tab-text);
+      font: 13px/1.3 system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    .fx[data-wide="true"] { --head: 40px; --side: 260px; }
+
+    /* The lava: one strip across the top, one down the sidebar's edge, as in Firefox. */
+    .fx-lava { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+    .fx-lava canvas { position: absolute; top: 0; left: 0; display: block; }
+    .fx-lava canvas.right { left: auto; right: 0; }
+    .fx-lava canvas[hidden] { display: none; }
+
+    .fx-tabs, .fx-nav, .fx-body { position: relative; z-index: 1; }
+    .fx svg { display: block; width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* Tabs: Firefox's shape (36 px tall, 8 px corners) and its hover, 11% of the text colour. */
+    .fx-tabs { display: flex; align-items: center; gap: 3px; height: 44px; padding: 0 0 0 6px; user-select: none; }
+    .fx[data-wide="true"] .fx-tabs { display: none; }
+    .fx-strip { display: flex; flex: 0 1 681px; gap: 3px; min-width: 0; }
+    .fx-tab { display: flex; flex: 0 1 225px; align-items: center; gap: 8px; min-width: 34px; height: 36px; margin: 0; padding: 0 6px 0 10px; overflow: hidden; border: 0; border-radius: 8px; background: transparent; color: inherit; font: inherit; font-size: 12px; text-align: left; white-space: nowrap; cursor: pointer; }
+    .fx-tab:hover { background: color-mix(in srgb, currentColor 11%, transparent); }
+    .fx-tab.is-selected { background: var(--tab-selected); color: var(--tab-selected-text); box-shadow: 0 0 4px rgba(0, 0, 0, 0.4), inset 0 0 0 1px color-mix(in srgb, currentColor 10%, transparent); }
+    .fx-tab:focus-visible { outline-offset: -2px; }
+    .fx-tab span { flex: 1; min-width: 0; padding: 3px 0; overflow: hidden; text-overflow: ellipsis; }
+    .fx-tab img { flex: none; width: 16px; height: 16px; }
+    .fx .fx-x { flex: none; width: 10px; height: 10px; margin: 0 6px; opacity: 0.85; }
+    .fx-tab.is-new { cursor: default; }
+    .fx-tab.is-new:hover { background: transparent; }
+    .fx-spring { flex: 1; }
+    .fx-glyph { display: grid; flex: none; place-items: center; width: 32px; height: 32px; border-radius: 4px; color: var(--icons); }
+    .fx-window { display: flex; flex: none; }
+    .fx-window .fx-glyph { width: 44px; border-radius: 0; }
+    .fx-nav .fx-window { display: none; margin-right: -8px; }
+    .fx[data-wide="true"] .fx-nav .fx-window { display: flex; }
+
+    .fx-nav { display: flex; align-items: center; gap: 3px; height: 40px; padding: 0 8px; background: var(--toolbar); color: var(--toolbar-text); user-select: none; }
+    .fx-url { display: flex; flex: 1; align-items: center; gap: 8px; min-width: 0; height: 32px; margin: 0 4px; padding: 0 10px; overflow: hidden; border: 1px solid var(--field-border); border-radius: 6px; background: var(--field); color: var(--field-text); white-space: nowrap; }
+    .fx-url span { overflow: hidden; text-overflow: ellipsis; }
+    .fx-button { display: grid; flex: none; place-items: center; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 4px; background: transparent; cursor: pointer; }
+    .fx-button:hover { background: var(--hover); }
+    .fx-button[aria-expanded="true"] { background: var(--active); }
+    .fx-button img { display: block; width: 18px; height: 18px; }
+
+    /* Firefox's sidebar is there whether or not the lava runs down it. */
+    .fx-body { display: flex; flex: 1; min-height: 0; }
+    .fx-side { display: flex; flex: none; flex-direction: column; gap: 4px; width: var(--side); padding: 8px; color: var(--tab-text); user-select: none; }
+    .fx[data-sidebar="right"] .fx-side { order: 2; }
+    .fx-side .fx-glyph { width: 36px; height: 36px; }
+    .fx-side .fx-strip { display: none; flex: none; flex-direction: column; gap: 4px; }
+    .fx-side .fx-tab { flex: none; width: 100%; }
+    .fx[data-wide="true"] .fx-side .fx-strip { display: flex; }
+    .fx[data-wide="true"] .fx-side .fx-tools { display: flex; flex-wrap: wrap; margin-top: auto; }
+
+    /* The page: no line under the toolbar, and a rounded corner where it meets the sidebar. */
+    .fx-content {
+      --muted: color-mix(in srgb, var(--content-text) 72%, var(--content));
+      --rule: color-mix(in srgb, var(--content-text) 16%, var(--content));
+      --soft: color-mix(in srgb, var(--content-text) 6%, var(--content));
+      flex: 1; min-width: 0; padding: 40px 362px 36px 40px; border-top-left-radius: 8px; background: var(--content); box-shadow: 0 0 5px rgba(0, 0, 0, 0.35); color: var(--content-text); font-size: 16px; line-height: 1.55;
+    }
+    .fx[data-sidebar="right"] .fx-content { border-top-left-radius: 0; border-top-right-radius: 8px; }
+    .fx-page { max-width: 640px; }
+
+    /* In Firefox the panel would cover a right-hand sidebar. Here it steps aside, so the lava there can be seen. */
+    .fx-panel { position: absolute; z-index: 3; top: calc(var(--head) - 3px); right: 8px; width: 322px; overflow: hidden; border: 1px solid var(--panel-border); border-radius: 8px; background: #1c1b22; box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5); }
+    .fx[data-sidebar="right"] .fx-panel { right: calc(var(--side) + 8px); }
+    .fx-panel[hidden] { display: none; }
+    .fx-panel iframe { display: block; width: 320px; height: var(--panel-h, 492px); border: 0; }
+
+    /* ---------- the three pages ---------- */
+    .hero-icon { display: block; width: 76px; height: 76px; margin-bottom: 18px; }
+    .eyebrow { margin: 0 0 6px; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.8; }
+    h1 { margin: 0 0 12px; font-size: clamp(2.3rem, 6vw, 3.6rem); font-weight: 800; line-height: 1; letter-spacing: -0.01em; }
+    .lede { max-width: 30em; margin: 0 0 8px; font-size: 1.15rem; }
+    .both { max-width: 36em; margin: 0 0 22px; color: var(--muted); }
+    /* The two ways to get it, side by side, each with its own button. */
+    .kinds { display: grid; grid-template-columns: 2fr 3fr; gap: 12px; }
+    .kind { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; padding: 14px 16px 16px; border: 1px solid var(--rule); border-radius: 10px; background: var(--soft); }
+    .kind h2 { margin: 0; padding: 0; border: 0; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.08em; line-height: 1.55; text-transform: uppercase; opacity: 0.8; }
+    .kind p { margin: 0; }
+    .kind ul { margin: 0; padding-left: 18px; }
+    .kind li { margin: 3px 0; }
+    .kind .small { color: var(--muted); font-size: 0.9rem; }
+    .kind .cta-button { margin-top: auto; }
+    .cta-button { display: inline-flex; align-items: center; min-height: 42px; padding: 8px 16px; border: 1px solid transparent; border-radius: 8px; background: var(--accent); color: var(--accent-text); font-weight: 700; text-decoration: none; }
+    a.cta-button:hover { filter: brightness(1.12); }
+    .fx-fail { display: none; margin-top: 14px; }
+    .fx[data-lava="none"] .fx-fail { display: block; }
+
+    h2 { margin: 0 0 12px; padding-bottom: 8px; border-bottom: 2px solid var(--line); font-size: 1.55rem; line-height: 1.15; }
+    .fx-page h2:not(:first-child) { margin-top: 36px; }
+    p { margin: 0 0 12px; }
+    p:last-child, ul:last-child { margin-bottom: 0; }
+    ul { margin: 0 0 12px; padding-left: 22px; }
+    li { margin: 6px 0; }
+    code { padding: 1px 5px; border: 1px solid var(--rule); border-radius: 4px; background: var(--soft); font-family: Consolas, "Courier New", monospace; font-size: 0.92em; }
+    .muted { color: var(--muted); }
+
+    .links { margin: 0; padding: 0; list-style: none; }
+    .links li { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 10px; align-items: baseline; }
+    .links span { color: var(--muted); font-weight: 700; }
+    .links a { overflow-wrap: anywhere; }
+
+    @media (max-width: 800px) {
+      .page { padding: 12px 10px; }
+      .fx { min-height: 0; }
+      .fx-tabs { padding-right: 6px; }
+      .fx-tabs .fx-window, .fx-tabs > .fx-glyph, .fx-tabs .fx-spring { display: none; }
+      .fx-strip { flex: 1; }
+      .fx-tab { flex: 1 1 0; padding: 0 8px; }
+      .fx .fx-x { display: none; }
+      .fx-content { padding: 26px 20px 24px; }
+      .fx[data-wide="true"] { --side: 120px; }
+      /* No room beside the page for the panel: it goes under it. */
+      .fx-panel, .fx[data-sidebar="right"] .fx-panel { position: relative; top: auto; right: auto; flex: none; align-self: center; margin: 14px 0; }
+      .links li { display: block; }
+      .kinds { grid-template-columns: 1fr; }
+    }
+  </style>
+  <noscript><style>.fx-page[hidden] { display: block; margin-top: 36px; } .fx-panel { display: none; } .fx-content { padding-right: 40px; }</style></noscript>
+</head>
+<body>
+  <main class="page">
+    <div class="fx" id="fx" data-on="true" data-sidebar="left" data-wide="false" data-page="home">
+      <div class="fx-lava" aria-hidden="true">
+        <canvas id="lavaTop" width="1" height="1" hidden></canvas>
+        <canvas id="lavaSide" width="1" height="1" hidden></canvas>
+      </div>
+
+      <div class="fx-tabs">
+        <div class="fx-strip" role="tablist" aria-label="Pages">
+          <button class="fx-tab is-selected" type="button" role="tab" data-page="home" aria-selected="true" aria-controls="page-home"><img src="ext/icon.svg" alt=""><span>Lava Lamp for Firefox</span><svg class="fx-x" viewBox="0 0 10 10" aria-hidden="true"><path d="M1 1l8 8M9 1l-8 8"/></svg></button>
+          <button class="fx-tab" type="button" role="tab" data-page="privacy" aria-selected="false" aria-controls="page-privacy" tabindex="-1"><img src="ext/icon.svg" alt=""><span>Privacy &amp; Warranty</span><svg class="fx-x" viewBox="0 0 10 10" aria-hidden="true"><path d="M1 1l8 8M9 1l-8 8"/></svg></button>
+          <button class="fx-tab" type="button" role="tab" data-page="links" aria-selected="false" aria-controls="page-links" tabindex="-1"><img src="ext/icon.svg" alt=""><span>Developer Links</span><svg class="fx-x" viewBox="0 0 10 10" aria-hidden="true"><path d="M1 1l8 8M9 1l-8 8"/></svg></button>
+        </div>
+        <div class="fx-glyph" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M8 3v10M3 8h10"/></svg></div>
+        <div class="fx-spring"></div>
+        <div class="fx-window" aria-hidden="true">
+          <div class="fx-glyph"><svg viewBox="0 0 16 16"><path d="M3.5 8h9"/></svg></div>
+          <div class="fx-glyph"><svg viewBox="0 0 16 16"><rect x="3.5" y="3.5" width="9" height="9"/></svg></div>
+          <div class="fx-glyph"><svg viewBox="0 0 16 16"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9"/></svg></div>
+        </div>
+      </div>
+
+      <div class="fx-nav">
+        <div class="fx-glyph" aria-hidden="true"><svg viewBox="0 0 16 16"><rect x="2.5" y="3.5" width="11" height="9" rx="1.5"/><path d="M6.5 3.5v9"/></svg></div>
+        <div class="fx-glyph" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M13 8H3M7 4L3 8l4 4"/></svg></div>
+        <div class="fx-glyph" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg></div>
+        <div class="fx-glyph" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M12.5 8a4.5 4.5 0 1 1-1.4-3.3M12.5 2.5v2.6H9.9"/></svg></div>
+        <div class="fx-url" aria-hidden="true">
+          <svg viewBox="0 0 16 16"><rect x="4" y="7" width="8" height="6" rx="1"/><path d="M5.8 7V5.2a2.2 2.2 0 0 1 4.4 0V7"/></svg>
+          <span id="fxAddress">andkon.dev/lavalamp</span>
+        </div>
+        <button class="fx-button" id="fxButton" type="button" aria-expanded="true" aria-controls="fxPanel" title="Lava Lamp"><img src="ext/icon.svg" alt="Lava Lamp controls"></button>
+        <div class="fx-glyph" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3 4.5h10M3 8h10M3 11.5h10"/></svg></div>
+        <div class="fx-window" aria-hidden="true">
+          <div class="fx-glyph"><svg viewBox="0 0 16 16"><path d="M3.5 8h9"/></svg></div>
+          <div class="fx-glyph"><svg viewBox="0 0 16 16"><rect x="3.5" y="3.5" width="9" height="9"/></svg></div>
+          <div class="fx-glyph"><svg viewBox="0 0 16 16"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9"/></svg></div>
+        </div>
+      </div>
+
+      <div class="fx-body">
+        <div class="fx-side">
+          <div class="fx-strip" role="tablist" aria-label="Pages" aria-orientation="vertical">
+            <button class="fx-tab is-selected" type="button" role="tab" data-page="home" aria-selected="true" aria-controls="page-home"><img src="ext/icon.svg" alt=""><span>Lava Lamp for Firefox</span><svg class="fx-x" viewBox="0 0 10 10" aria-hidden="true"><path d="M1 1l8 8M9 1l-8 8"/></svg></button>
+            <button class="fx-tab" type="button" role="tab" data-page="privacy" aria-selected="false" aria-controls="page-privacy" tabindex="-1"><img src="ext/icon.svg" alt=""><span>Privacy &amp; Warranty</span><svg class="fx-x" viewBox="0 0 10 10" aria-hidden="true"><path d="M1 1l8 8M9 1l-8 8"/></svg></button>
+            <button class="fx-tab" type="button" role="tab" data-page="links" aria-selected="false" aria-controls="page-links" tabindex="-1"><img src="ext/icon.svg" alt=""><span>Developer Links</span><svg class="fx-x" viewBox="0 0 10 10" aria-hidden="true"><path d="M1 1l8 8M9 1l-8 8"/></svg></button>
+            <div class="fx-tab is-new" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M8 3v10M3 8h10"/></svg><span>New tab</span></div>
+          </div>
+          <div class="fx-tools" aria-hidden="true">
+            <div class="fx-glyph"><svg viewBox="0 0 16 16"><path d="M8 2.5l1.7 3.5 3.8.5-2.8 2.7.7 3.8L8 11.2 4.6 13l.7-3.8L2.5 6.5l3.8-.5z"/></svg></div>
+            <div class="fx-glyph"><svg viewBox="0 0 16 16"><path d="M7 3l1.2 3.3 3.3 1.2-3.3 1.2L7 12 5.8 8.7 2.5 7.5l3.3-1.2zM12.2 2v2.6M10.9 3.3h2.6"/></svg></div>
+            <div class="fx-glyph"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.3"/><path d="M8 5v3.2l2 1.3"/></svg></div>
+            <div class="fx-glyph"><svg viewBox="0 0 16 16"><path d="M2.5 4h8v6h-8zM4.5 12.5h4"/><rect x="10.5" y="6.5" width="3.5" height="6.5" rx="0.8"/></svg></div>
+            <div class="fx-glyph"><svg viewBox="0 0 16 16"><circle cx="5.5" cy="10.5" r="2.5"/><path d="M7.3 8.7l5.2-5.2M10.5 5.5l1.8 1.8"/></svg></div>
+          </div>
+        </div>
+
+        <div class="fx-content">
+          <section class="fx-page" id="page-home" role="tabpanel" aria-label="Lava Lamp for Firefox">
+            <img class="hero-icon" src="ext/icon.svg" alt="">
+            <p class="eyebrow">For Firefox</p>
+            <h1>Lava Lamp</h1>
+            <p class="lede">Slow, looping lava behind your tabs, toolbar and sidebar.</p>
+            <p class="both">It comes as a theme or an extension: both are for Firefox on a computer, keep text readable over the lava and collect nothing.</p>
+            <div class="kinds">
+              <div class="kind">
+                <h2>Theme</h2>
+                <ul>
+                  <li>The original</li>
+                  <li>One look</li>
+                  <li>No settings</li>
+                  <li>Under 7 MB</li>
+                </ul>
+                <a class="cta-button" href="https://addons.mozilla.org/en-US/firefox/addon/lavalamp/" target="_blank" rel="noopener">Get the theme</a>
+              </div>
+              <div class="kind">
+                <h2>Extension</h2>
+                <ul>
+                  <li>Adds the panel shown here</li>
+                  <li>Three looks, any color</li>
+                  <li>Speed, size, amount and a sidebar strip</li>
+                  <li>About 55 MB, Firefox 140 or later</li>
+                </ul>
+                <p class="small">Size, Amount and sidebar changes take a few seconds to build, once. Bigger settings use more memory.</p>
+                <a class="cta-button" href="https://addons.mozilla.org/en-US/firefox/addon/lavalampcontrols/" target="_blank" rel="noopener">Get the extension</a>
+              </div>
+            </div>
+            <p class="fx-fail muted">The lava could not start in this browser.</p>
+            <noscript><p class="muted" style="margin-top: 14px">The live demo needs JavaScript.</p></noscript>
+          </section>
+
+          <section class="fx-page" id="page-privacy" role="tabpanel" aria-label="Privacy &amp; Warranty" hidden>
+            <h2>Privacy</h2>
+            <p>Neither the extension nor the theme collects anything.</p>
+            <ul>
+              <li><strong>The extension</strong> keeps your settings, and any animation it has made, in Firefox on your computer. It asks for two permissions: <code>theme</code>, to show the lava, and <code>storage</code>, to remember your settings. It makes no network requests and has no analytics, accounts or ads.</li>
+              <li><strong>The theme</strong> is colors and one animated image. It contains no code.</li>
+              <li><strong>The demo on this page</strong> runs in your browser. What you choose here is not saved or sent anywhere.</li>
+            </ul>
+
+            <h2>No Warranty</h2>
+            <p>The extension and the theme are provided "as is" and "as available," without warranties of any kind, either express or implied. To the fullest extent permitted by law, we disclaim all warranties, including implied warranties of merchantability, fitness for a particular purpose, non-infringement, accuracy, reliability, availability, and uninterrupted or error-free operation. Your use of them is at your own risk.</p>
+          </section>
+
+          <section class="fx-page" id="page-links" role="tabpanel" aria-label="Developer Links" hidden>
+            <h2>Developer Links</h2>
+            <ul class="links">
+              <li><span>Project homepage:</span> <a href="https://andkon.dev/lavalamp/">andkon.dev/lavalamp/</a></li>
+              <li><span>Theme:</span> <a href="https://addons.mozilla.org/en-US/firefox/addon/lavalamp/" target="_blank" rel="noopener">addons.mozilla.org/firefox/addon/lavalamp/</a></li>
+              <li><span>Extension:</span> <a href="https://addons.mozilla.org/en-US/firefox/addon/lavalampcontrols/" target="_blank" rel="noopener">addons.mozilla.org/firefox/addon/lavalampcontrols/</a></li>
+              <li><span>Email/PayPal/tips:</span> <a href="mailto:andkon@andkon.com">andkon@andkon.com</a></li>
+              <li><span>Developer site:</span> <a href="https://andkon.dev/">andkon.dev</a></li>
+            </ul>
+          </section>
+        </div>
+      </div>
+
+      <div class="fx-panel" id="fxPanel">
+        <iframe id="fxFrame" title="Lava Lamp controls"></iframe>
+      </div>
+    </div>
+  </main>
+
+  <script src="ext/lava-core.js"></script>
+  <script src="ext/drafts.js"></script>
+  <script src="ext/theme-colors.js"></script>
+  <script src="ext/shared.js"></script>
+  <script src="demo.js"></script>
+</body>
+</html>

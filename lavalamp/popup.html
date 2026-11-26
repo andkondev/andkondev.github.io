@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Lava Lamp controls</title>
+<!--
+  The Lava Lamp Controls popup, as the extension ships it (ext/popup.css and
+  ext/popup.js are unchanged). Two files are added so it can run on a page:
+  popup-web.css and popup-bridge.js. Shown inside ../lavalamp/index.html.
+-->
+<link rel="stylesheet" href="ext/popup.css">
+<link rel="stylesheet" href="popup-web.css">
+</head>
+<body>
+<header>
+  <canvas id="preview" width="320" height="100" aria-label="Preview"></canvas>
+  <label class="power">On <input type="checkbox" id="on" class="switch"></label>
+</header>
+<main>
+  <section class="looks" role="radiogroup" aria-label="Look">
+    <label><input type="radio" name="look" id="look-midnight" value="midnight"><i class="sw-midnight"></i><span>Midnight</span></label>
+    <label><input type="radio" name="look" id="look-daylight" value="daylight"><i class="sw-daylight"></i><span>Daylight</span></label>
+    <label><input type="radio" name="look" id="look-classic" value="classic"><i class="sw-classic"></i><span>Classic</span></label>
+  </section>
+  <section>
+    <label class="row plain"><span>Color</span><input type="range" id="hue" class="hue"></label>
+    <label class="row plain"><span>Background</span><input type="range" id="bg" class="hue"></label>
+    <label class="row"><span>Active tab</span><input type="range" id="tab"><output id="tabOut"></output></label>
+  </section>
+  <section>
+    <label class="row"><span>Speed</span><input type="range" id="speed"><output id="speedOut"></output></label>
+    <label class="row"><span>Size</span><input type="range" id="size"><output id="sizeOut"></output></label>
+    <label class="row"><span>Amount</span><input type="range" id="amount"><output id="amountOut"></output></label>
+  </section>
+  <section>
+    <div class="row plain" role="radiogroup" aria-label="Sidebar"><span>Sidebar</span><span class="seg">
+      <input type="radio" name="sidebar" id="side-off" value="off"><label for="side-off">Off</label>
+      <input type="radio" name="sidebar" id="side-left" value="left"><label for="side-left">Left</label>
+      <input type="radio" name="sidebar" id="side-right" value="right"><label for="side-right">Right</label>
+    </span></div>
+    <label class="row plain" id="wideRow"><span>Wide</span><span class="wide"><input type="checkbox" id="wide" class="switch"><small>for vertical tabs</small></span></label>
+  </section>
+</main>
+<footer>
+  <span id="status" role="status"></span>
+  <button id="reset" type="button">Reset</button>
+</footer>
+<script src="ext/lava-core.js"></script>
+<script src="ext/wax-core.js"></script>
+<script src="ext/drafts.js"></script>
+<script src="ext/theme-colors.js"></script>
+<script src="ext/shared.js"></script>
+<script src="popup-bridge.js"></script>
+<script src="ext/popup.js"></script>
+</body>
+</html>
